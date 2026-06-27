@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Aarkam.DDD.Repositories/Aarkam.Domain.Repositories.csproj" />
+  </Folder>
+</Solution>

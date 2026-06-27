@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<!-- Multi Target -->
+		<TargetFrameworks>netstandard2.1;net6.0;net8.0;net10.0</TargetFrameworks>
+
+		<!-- Language -->
+		<LangVersion>preview</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+		<IsPackable>true</IsPackable>
+		<Authors>Mohamed Mohamed Elhelbawi</Authors>
+		<Company>Aarkam</Company>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>1.0.0-preview02</Version>
+		<PackageOutputPath>C:\Nuget</PackageOutputPath>
+		<Title>Aarkam.DDD.Repositories</Title>
+
+		<!-- Project and Repository URLs -->
+		<PackageProjectUrl>https://github.com/melhelbawi/Aarkam.Mediator</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/melhelbawi/Aarkam.DDD.Domain</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<!-- Source Link & Debugging Symbols -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<!-- Build Settings -->
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>C:\Nuget</PackageOutputPath>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Aarkam.DDD.Domain" Version="1.0.0-preview01" />
+	</ItemGroup>
+
+</Project>
