@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Aarkam.Domain.Repositories;
+﻿namespace Aarkam.Domain.Repositories;
 /// <summary>
 /// Specifies the direction in which a collection is sorted.
 /// </summary>
@@ -96,11 +93,11 @@ public class PaginationModel
     /// <summary>
     /// Gets or sets the search expression (e.g., "PropName = Value").
     /// </summary>
-    public string SearchExpression { get; set; }
+    public string? SearchExpression { get; set; }
     /// <summary>
     /// Gets or sets multiple filter expressions.
     /// </summary>
-    public IEnumerable<FilterItem> Filters { get; set; }
+    public IEnumerable<FilterItem>? Filters { get; set; }
     /// <summary>
     /// Gets or sets the sorting configuration.
     /// </summary>
