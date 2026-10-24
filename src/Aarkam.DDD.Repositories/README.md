@@ -2,9 +2,10 @@
 
 [![NuGet Version](https://img.shields.io/nuget/v/Aarkam.DDD.Repositories.svg?style=flat-square&color=007ACC)](https://www.nuget.org/packages/Aarkam.DDD.Repositories/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Aarkam.DDD.Repositories.svg?style=flat-square&color=28a745)](https://www.nuget.org/packages/Aarkam.DDD.Repositories/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![.NET Multi-Target](https://img.shields.io/badge/.NET-Standard_2.1_|_6.0_|_8.0_|_10.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Repositories/blob/main/LICENSE)
+[![.NET Multi-Target](https://img.shields.io/badge/.NET-Standard_2.1_%7C_6.0_%7C_8.0_%7C_10.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![AOT Ready](https://img.shields.io/badge/Native_AOT-Supported-success?style=flat-square&logo=speedtest)](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
+[![Unit Tests](https://img.shields.io/badge/Tests-373_Passing-brightgreen.svg?style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Repositories)
 
 > **We are a unique, standalone, zero-dependency Domain & Persistence foundation crafted from the ground up for modern enterprise architecture.**
 
@@ -113,16 +114,22 @@ flowchart TD
 
 ## 📦 Installation
 
-Install the package via NuGet CLI:
+Install version `1.0.1` via .NET CLI:
 
 ```bash
-dotnet add package Aarkam.DDD.Repositories
+dotnet add package Aarkam.DDD.Repositories --version 1.0.1
 ```
 
-Or using the Package Manager Console:
+Or using the Package Manager Console in Visual Studio:
 
 ```powershell
-Install-Package Aarkam.DDD.Repositories
+Install-Package Aarkam.DDD.Repositories -Version 1.0.1
+```
+
+Or add the package reference directly to your `.csproj`:
+
+```xml
+<PackageReference Include="Aarkam.DDD.Repositories" Version="1.0.1" />
 ```
 
 ---
@@ -454,7 +461,7 @@ NuGet: [https://www.nuget.org/packages/Aarkam.DDD.Repositories/](https://www.nug
 
 ## 📄 License
 
-This project is licensed under the **[MIT License](LICENSE)**.
+This project is licensed under the **[MIT License](https://github.com/melhelbawi/Aarkam.DDD.Repositories/blob/main/LICENSE)**.
 
 ```text
 Copyright © 2026 Aarkam & Mohamed Elhelbawi. All rights reserved.

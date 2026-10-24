@@ -49,7 +49,7 @@ namespace Aarkam.Domain.Repositories
                 if (filter == null || string.IsNullOrWhiteSpace(filter.Property))
                     continue;
 
-                if (!allowedProperties.Contains(filter.Property))
+                if (!allowedProperties.Contains(filter.Property, StringComparer.OrdinalIgnoreCase))
                     continue;
 
                 var propertyInfo = typeof(TEntity).GetProperty(
@@ -237,8 +237,12 @@ namespace Aarkam.Domain.Repositories
             if (convertedValues.Count == 0)
                 return null;
 
-            var arrayType = propertyType.MakeArrayType();
-            var arrayConstant = Expression.Constant(convertedValues.ToArray(), arrayType);
+            var typedArray = Array.CreateInstance(propertyType, convertedValues.Count);
+            for (var i = 0; i < convertedValues.Count; i++)
+            {
+                typedArray.SetValue(convertedValues[i], i);
+            }
+            var arrayConstant = Expression.Constant(typedArray, propertyType.MakeArrayType());
 
             var containsMethod = typeof(Enumerable)
                 .GetMethods()

@@ -11,7 +11,7 @@
 		<!-- Package Identification -->
 		<PackageId>Aarkam.DDD.Repositories</PackageId>
 		<Title>Aarkam.DDD.Repositories</Title>
-		<Version>1.0.0-preview02</Version>
+		<Version>1.0.1</Version>
 		<Authors>Eng. Mohamed ElHelbawi, Aarkam Team</Authors>
 		<Company>Aarkam</Company>
 		<Description>Enterprise Domain-Driven Design (DDD) repository, unit of work, transactional outbox/inbox, saga, snapshot, and dynamic query abstractions for modern .NET applications. Native AOT &amp; trimming ready with zero external infrastructure dependencies.</Description>

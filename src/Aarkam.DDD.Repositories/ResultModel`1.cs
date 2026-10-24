@@ -117,10 +117,16 @@ namespace Aarkam.Domain.Repositories
             => new(true, "Operation completed successfully.", null, "S000");
 
         /// <summary>
-        /// Creates a successful result with a custom message.
+        /// Creates a successful result with a custom message and optional response code.
         /// </summary>
-        public static ResultModel Success(string message)
-            => new(true, message, null, "S000");
+        public static ResultModel Success(string message, string responseCode = "S000")
+            => new(true, message, null, responseCode);
+
+        /// <summary>
+        /// Creates a default failed result.
+        /// </summary>
+        public static ResultModel Failure()
+            => new(false, "Operation failed.", null, "E500");
 
         /// <summary>
         /// Creates a failed result with a single error object and optional response code and severity.
@@ -244,8 +250,14 @@ namespace Aarkam.Domain.Repositories
         /// <summary>
         /// Creates a successful result with data and custom message.
         /// </summary>
-        public static ResultModel<TData> Success(TData data, string message)
-            => new(data, true, message, null, "S000");
+        public static ResultModel<TData> Success(TData data, string message, string responseCode = "S000")
+            => new(data, true, message, null, responseCode);
+
+        /// <summary>
+        /// Creates a default failed generic result.
+        /// </summary>
+        public new static ResultModel<TData> Failure()
+            => new(default, false, "Operation failed.", null, "E500");
 
         /// <summary>
         /// Creates a failed result with a single error (data will be default/null).

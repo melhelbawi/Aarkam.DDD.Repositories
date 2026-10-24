@@ -64,7 +64,7 @@ public static class QueryRepositoryExtensions
 
         var parameter = Expression.Parameter(typeof(TEntity), "x");
         Expression? combinedExpression = null;
-        bool exactMatch = false;
+        bool exactMatch = parts.Any(p => p.Equals("Exact=true", StringComparison.OrdinalIgnoreCase) || p.Equals("Exact=1", StringComparison.OrdinalIgnoreCase));
 
         foreach (var part in parts)
         {
@@ -86,7 +86,7 @@ public static class QueryRepositoryExtensions
                 continue;
 
             // Security: Whitelist check
-            if (allowedProperties != null && !allowedProperties.Contains(propertyName))
+            if (allowedProperties != null && !allowedProperties.Contains(propertyName, StringComparer.OrdinalIgnoreCase))
                 continue;
 
             var propertyInfo = typeof(TEntity).GetProperties(BindingFlags.Public | BindingFlags.Instance)

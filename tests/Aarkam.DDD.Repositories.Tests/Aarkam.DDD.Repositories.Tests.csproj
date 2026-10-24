@@ -9,6 +9,7 @@
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<NoWarn>$(NoWarn);xUnit1051</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
