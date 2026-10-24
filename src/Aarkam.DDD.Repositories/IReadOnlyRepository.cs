@@ -58,36 +58,50 @@ public interface IReadOnlyRepository<TEntity, TKey> where TEntity : class, IEnti
     Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Asynchronously retrieves all entities in the underlying store.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A read-only collection of all entities.</returns>
+    Task<IReadOnlyList<TEntity>> ListAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Asynchronously retrieves a read-only list of entities satisfying the provided specification.
     /// </summary>
-    /// <param name="specification">An optional specification. If <see langword="null"/>, all entities are returned.</param>
+    /// <param name="specification">The specification defining query criteria and eager-loading rules.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A read-only collection of matching entities.</returns>
-    Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity>? specification = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously retrieves a read-only list of entities satisfying the provided predicate expression.
     /// </summary>
-    /// <param name="predicate">An optional predicate expression. If <see langword="null"/>, all entities are returned.</param>
+    /// <param name="predicate">An expression defining the search condition.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A read-only collection of matching entities.</returns>
-    Task<IReadOnlyList<TEntity>> ListAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TEntity>> ListAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously counts all entities in the underlying store.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>The total number of entities in the underlying store.</returns>
+    Task<long> CountAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously counts the number of entities satisfying the provided specification.
     /// </summary>
-    /// <param name="specification">An optional specification. If <see langword="null"/>, counts all entities.</param>
+    /// <param name="specification">The specification defining query criteria.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>The total number of matching entities in the underlying store.</returns>
-    Task<long> CountAsync(ISpecification<TEntity>? specification = null, CancellationToken cancellationToken = default);
+    Task<long> CountAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously counts the number of entities satisfying the provided predicate expression.
     /// </summary>
-    /// <param name="predicate">An optional predicate expression. If <see langword="null"/>, counts all entities.</param>
+    /// <param name="predicate">An expression defining the search condition.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>The total number of matching entities in the underlying store.</returns>
-    Task<long> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
+    Task<long> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously retrieves a paginated subset of entities satisfying the provided specification.

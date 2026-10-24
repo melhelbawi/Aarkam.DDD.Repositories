@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Aarkam.DDD.Repositories.Sql/Aarkam.DDD.Repositories.Sql.csproj" />
     <Project Path="src/Aarkam.DDD.Repositories/Aarkam.Domain.Repositories.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Aarkam.DDD.Repositories.Sql.Tests/Aarkam.DDD.Repositories.Sql.Tests.csproj" />
     <Project Path="tests/Aarkam.DDD.Repositories.Tests/Aarkam.DDD.Repositories.Tests.csproj" />
   </Folder>
 </Solution>

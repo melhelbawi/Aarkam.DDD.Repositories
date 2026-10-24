@@ -90,28 +90,38 @@ public class InMemoryAggregateRepository : IAggregateRepository<TestCustomerAggr
         return Task.FromResult(_store.Values.AsQueryable().FirstOrDefault(predicate));
     }
 
-    public Task<IReadOnlyList<TestCustomerAggregate>> ListAsync(ISpecification<TestCustomerAggregate>? specification = null, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<TestCustomerAggregate>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<TestCustomerAggregate>>(_store.Values.ToList());
+    }
+
+    public Task<IReadOnlyList<TestCustomerAggregate>> ListAsync(ISpecification<TestCustomerAggregate> specification, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (specification != null) q = q.Where(specification.ToExpression());
         return Task.FromResult<IReadOnlyList<TestCustomerAggregate>>(q.ToList());
     }
 
-    public Task<IReadOnlyList<TestCustomerAggregate>> ListAsync(Expression<Func<TestCustomerAggregate, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<TestCustomerAggregate>> ListAsync(Expression<Func<TestCustomerAggregate, bool>> predicate, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (predicate != null) q = q.Where(predicate);
         return Task.FromResult<IReadOnlyList<TestCustomerAggregate>>(q.ToList());
     }
 
-    public Task<long> CountAsync(ISpecification<TestCustomerAggregate>? specification = null, CancellationToken cancellationToken = default)
+    public Task<long> CountAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult((long)_store.Count);
+    }
+
+    public Task<long> CountAsync(ISpecification<TestCustomerAggregate> specification, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (specification != null) q = q.Where(specification.ToExpression());
         return Task.FromResult((long)q.Count());
     }
 
-    public Task<long> CountAsync(Expression<Func<TestCustomerAggregate, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    public Task<long> CountAsync(Expression<Func<TestCustomerAggregate, bool>> predicate, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (predicate != null) q = q.Where(predicate);
@@ -273,28 +283,38 @@ public class InMemoryDocumentRepository : IDocumentRepository<TestDocumentEntity
     public Task<TestDocumentEntity?> FindAsync(Expression<Func<TestDocumentEntity, bool>> predicate, CancellationToken cancellationToken = default)
         => Task.FromResult(_store.Values.AsQueryable().FirstOrDefault(predicate));
 
-    public Task<IReadOnlyList<TestDocumentEntity>> ListAsync(ISpecification<TestDocumentEntity>? specification = null, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<TestDocumentEntity>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<IReadOnlyList<TestDocumentEntity>>(_store.Values.ToList());
+    }
+
+    public Task<IReadOnlyList<TestDocumentEntity>> ListAsync(ISpecification<TestDocumentEntity> specification, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (specification != null) q = q.Where(specification.ToExpression());
         return Task.FromResult<IReadOnlyList<TestDocumentEntity>>(q.ToList());
     }
 
-    public Task<IReadOnlyList<TestDocumentEntity>> ListAsync(Expression<Func<TestDocumentEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<TestDocumentEntity>> ListAsync(Expression<Func<TestDocumentEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (predicate != null) q = q.Where(predicate);
         return Task.FromResult<IReadOnlyList<TestDocumentEntity>>(q.ToList());
     }
 
-    public Task<long> CountAsync(ISpecification<TestDocumentEntity>? specification = null, CancellationToken cancellationToken = default)
+    public Task<long> CountAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult((long)_store.Count);
+    }
+
+    public Task<long> CountAsync(ISpecification<TestDocumentEntity> specification, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (specification != null) q = q.Where(specification.ToExpression());
         return Task.FromResult((long)q.Count());
     }
 
-    public Task<long> CountAsync(Expression<Func<TestDocumentEntity, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    public Task<long> CountAsync(Expression<Func<TestDocumentEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         var q = _store.Values.AsQueryable();
         if (predicate != null) q = q.Where(predicate);

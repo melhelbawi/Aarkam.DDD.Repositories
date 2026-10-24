@@ -1,0 +1,92 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<!-- Multi Target -->
+		<TargetFrameworks>net6.0;net7.0;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+
+		<!-- Language -->
+		<LangVersion>preview</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+		<!-- Package Identification -->
+		<PackageId>Aarkam.DDD.Repositories.Sql</PackageId>
+		<Title>Aarkam.DDD.Repositories.Sql</Title>
+		<Version>1.0.1</Version>
+		<Authors>Eng. Mohamed ElHelbawi, Aarkam Team</Authors>
+		<Company>Aarkam</Company>
+		<Description>Comprehensive, production-ready SQL and Relational Repository implementations for Domain-Driven Design (DDD) in .NET powered by Entity Framework Core. Provides generic IAggregateRepository, IRepository, IBasicRepository, IReadOnlyRepository, lean IUnitOfWork transaction boundaries, and resilient Transactional Outbox, Inbox, Saga, and Snapshot persistence across PostgreSQL, SQL Server, MySQL, SQLite, and Oracle.</Description>
+		<PackageTags>ddd;repository;sql;relational;entity-framework-core;efcore;unit-of-work;outbox;inbox;saga;snapshot;cqrs;dotnet;aot</PackageTags>
+
+		<!-- Project and Repository URLs -->
+		<PackageProjectUrl>https://aarkam.io/</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/melhelbawi/Aarkam.DDD.Repositories</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<!-- Packaging & Documentation -->
+		<IsPackable>true</IsPackable>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Copyright>Copyright © 2026 Aarkam (https://aarkam.io/) &amp; Mohamed Elhelbawi (https://github.com/melhelbawi). All rights reserved.</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>C:\Nuget</PackageOutputPath>
+
+		<!-- Source Link & Debugging Symbols -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+		<!-- Native AOT & Trimming Support -->
+		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
+		<NoWarn>$(NoWarn);CS1591;IL2026;IL2060;IL2072;IL2075;IL2087;IL2090;IL2091;IL3050;NU5104</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0' or '$(TargetFramework)' == 'net11.0'">
+		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+	</PropertyGroup>
+
+	<!-- Target-Specific EF Core and Relational Dependencies -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.36" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.20" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.20" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.13" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.13" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.2" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.13" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net11.0'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="11.0.0-rc.2.26504.105" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="11.0.0-rc.2.26504.105" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0-rc.2.26504.105" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Aarkam.DDD.Repositories\Aarkam.Domain.Repositories.csproj" />
+	</ItemGroup>
+</Project>
