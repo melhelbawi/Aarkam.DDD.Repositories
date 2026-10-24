@@ -1,37 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Aarkam.Domain.Repositories
 {
-    /// <summary>
-    /// Represents a single filter request from the client.
-    /// </summary>
-    public class FilterItem
-    {
-        /// <summary>
-        /// Name of the property to filter on (e.g. "Name", "Email", "Status").
-        /// </summary>
-        public string Property { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Value to filter by.
-        /// </summary>
-        public string Value { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Filter operator. Supported values: EQ, NEQ, CONTAINS, STARTSWITH, ENDSWITH.
-        /// Defaults to "EQ" (equals).
-        /// </summary>
-        public string Operator { get; set; } = "EQ";
-
-        // Optional: For IN operator (comma-separated values)
-        public string[] Values { get; set; }
-    }
-
-    public static class QerableFilterExtension
+    public static class QeryableFilterExtension
     {
         public static int MaxValueLength = 500;
 
@@ -58,19 +30,19 @@ namespace Aarkam.Domain.Repositories
         /// <param name="allowedProperties"></param>
         /// <returns></returns>
         public static IQueryable<TEntity> AddFilter<TEntity>(this IQueryable<TEntity> source,
-            IEnumerable<FilterItem> filters = null,
+            IEnumerable<FilterItem>? filters = null,
             FilterOperation filterOperation = FilterOperation.And,
-            IReadOnlyList<string> allowedProperties = null)
+            IReadOnlyList<string>? allowedProperties = null)
         {
-            if (source == null || filters == null || !filters.Any())
-                return source;
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (filters == null || !filters.Any()) return source;
 
             // Security: Fail-closed
             if (allowedProperties == null || allowedProperties.Count == 0)
                 return source;
 
             var parameter = Expression.Parameter(typeof(TEntity), "x");
-            Expression combinedExpression = null;
+            Expression? combinedExpression = null;
 
             foreach (var filter in filters)
             {
@@ -119,7 +91,7 @@ namespace Aarkam.Domain.Repositories
         /// <param name="rawValue"></param>
         /// <param name="operatorStr"></param>
         /// <returns></returns>
-        private static Expression BuildFilterExpression(MemberExpression propertyExpr, FilterItem filter)
+        private static Expression? BuildFilterExpression(MemberExpression propertyExpr, FilterItem filter)
         {
             var operatorStr = (filter.Operator?.ToUpperInvariant() ?? "EQ").Trim();
             var propertyType = propertyExpr.Type;
@@ -161,7 +133,7 @@ namespace Aarkam.Domain.Repositories
             if (filter.Value.Length > MaxValueLength)
                 return null;
 
-            object convertedValue = ConvertValue(filter.Value, propertyType);
+            object? convertedValue = ConvertValue(filter.Value, propertyType);
             if (convertedValue == null && propertyType != typeof(string))
                 return null;
 
@@ -202,7 +174,7 @@ namespace Aarkam.Domain.Repositories
         /// <param name="targetType">The type to which the value should be converted. Supported types include string, int, long, decimal, double,
         /// bool, Guid, and DateTime, including their nullable forms.</param>
         /// <returns>An object of the specified target type representing the converted value, or null if the conversion fails.</returns>
-        private static object ConvertValue(string rawValue, Type targetType)
+        private static object? ConvertValue(string rawValue, Type targetType)
         {
             if (targetType == typeof(string))
                 return rawValue;
@@ -248,7 +220,7 @@ namespace Aarkam.Domain.Repositories
         /// appropriate type.</param>
         /// <returns>An expression representing a call to Enumerable.Contains for the property and the provided values, or null
         /// if no valid values are supplied.</returns>
-        private static Expression BuildInExpression(MemberExpression propertyExpr, string[] values, Type propertyType)
+        private static Expression? BuildInExpression(MemberExpression propertyExpr, string[] values, Type propertyType)
         {
             if (values.Length == 0) return null;
 

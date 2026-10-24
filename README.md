@@ -1,1023 +1,461 @@
 # Aarkam.DDD.Repositories
 
-[![Nuget](https://img.shields.io/nuget/v/Aarkam.DDD.Repositories?style=flat-square)](https://www.nuget.org/packages/Aarkam.DDD.Repositories)
-[![GitHub License](https://img.shields.io/github/license/melhelbawi/Aarkam.DDD.Repositories?style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Repositories/blob/main/LICENSE)
-[![Platform](https://img.shields.io/badge/.NET-%3E%3D%20Standard%202.1%20%7C%206.0%20%7C%208.0%20%7C%2010.0-blue?style=flat-square)](#)
-[![Depends On](https://img.shields.io/badge/Depends%20On-Aarkam.DDD.Domain-blue?style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Domain)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/melhelbawi/Aarkam.DDD.Repositories/ci.yml?branch=main&style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Repositories/actions)
+[![NuGet Version](https://img.shields.io/nuget/v/Aarkam.DDD.Repositories.svg?style=flat-square&color=007ACC)](https://www.nuget.org/packages/Aarkam.DDD.Repositories/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Aarkam.DDD.Repositories.svg?style=flat-square&color=28a745)](https://www.nuget.org/packages/Aarkam.DDD.Repositories/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![.NET Multi-Target](https://img.shields.io/badge/.NET-Standard_2.1_|_6.0_|_8.0_|_10.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
+[![AOT Ready](https://img.shields.io/badge/Native_AOT-Supported-success?style=flat-square&logo=speedtest)](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
 
-A high-performance, enterprise-grade **persistence abstraction layer** for Domain-Driven Design (DDD) applications. Provides **repository interfaces**, **unit of work coordination**, and **distributed patterns** (inbox, outbox, sagas, snapshots) for building resilient, event-sourced, multi-tenant systems.
+> **We are a unique, standalone, zero-dependency Domain & Persistence foundation crafted from the ground up for modern enterprise architecture.**
 
-Built on top of **Aarkam.DDD.Domain**, this package offers ORM-agnostic contracts that work seamlessly with **Entity Framework Core**, **Dapper**, **MongoDB**, or any data access framework of your choice.
-
----
-
-## 📖 Table of Contents
-
-- [Quick Start](#quick-start-60-seconds)
-- [Installation](#installation)
-- [Core Concepts](#core-concepts)
-- [Repository Patterns](#repository-patterns)
-- [Unit of Work Pattern](#unit-of-work-pattern)
-- [Advanced Features](#advanced-features)
-- [Distributed Patterns](#distributed-patterns)
-- [Usage Examples](#usage-examples)
-- [Security Considerations](#security-considerations)
-- [Performance Notes](#performance-notes)
-- [Contributing](#contributing)
-- [License](#license)
+`Aarkam.DDD.Repositories` provides enterprise-grade, strongly typed repository, Unit of Work, transactional outbox/inbox, distributed saga, event-sourcing snapshot, and secure dynamic query abstractions for .NET applications. It decouples core business logic from concrete Object-Relational Mappers (such as Entity Framework Core, Marten, or Dapper) and NoSQL Document engines (such as Azure Cosmos DB, MongoDB, or Amazon DynamoDB) while guaranteeing complete transaction atomicity, resilient messaging, and Native AOT compatibility.
 
 ---
 
-## ⚡ Quick Start (60 Seconds)
+## 📑 Table of Contents
 
-```bash
-dotnet add package Aarkam.DDD.Repositories
-```
+- [Executive Summary](#-executive-summary)
+- [🚀 Key Features](#-key-features)
+- [⚡ Native AOT & IL Trimming](#-native-aot--il-trimming)
+- [🏗️ Architectural Overview & Repository Hierarchy](#️-architectural-overview--repository-hierarchy)
+- [📦 Installation](#-installation)
+- [📖 Core Abstractions & Usage Guide](#-core-abstractions--usage-guide)
+  - [1. Pure DDD Aggregate Root Repositories (`IAggregateRepository<TAggregate, TKey>`)](#1-pure-ddd-aggregate-root-repositories-iaggregaterepositorytaggregate-tkey)
+  - [2. NoSQL & Document Database Repositories (`IDocumentRepository<TDocument, TKey, TPartitionKey>`)](#2-nosql--document-database-repositories-idocumentrepositorytdocument-tkey-tpartitionkey)
+  - [3. Store-Agnostic Basic Repositories (`IBasicRepository<TEntity, TKey>`)](#3-store-agnostic-basic-repositories-ibasicrepositorytentity-tkey)
+  - [4. Relational & LINQ Repositories (`IRepository<TEntity, TKey>`)](#4-relational--linq-repositories-irepositorytentity-tkey)
+  - [5. Unit of Work Pattern (`IUnitOfWork`)](#5-unit-of-work-pattern-iunitofwork)
+  - [6. Transactional Outbox Pattern (`IOutboxRepository`)](#6-transactional-outbox-pattern-ioutboxrepository)
+  - [7. Idempotent Consumer Inbox Pattern (`IInboxRepository`)](#7-idempotent-consumer-inbox-pattern-iinboxrepository)
+  - [8. Distributed Saga State Management (`ISagaRepository`)](#8-distributed-saga-state-management-isagarepository)
+  - [9. Event Sourcing Snapshots (`ISnapshotRepository`)](#9-event-sourcing-snapshots-isnapshotrepository)
+  - [10. Secure Dynamic Querying & Filtering (`AddFilter`, `AddSearch`)](#10-secure-dynamic-querying--filtering-addfilter-addsearch)
+  - [11. Unified Result Models with DomainException (`ResultModel`, `PagedResult<T>`)](#11-unified-result-models-with-domainexception-resultmodel-pagedresultt)
+- [🛡️ Security Best Practices](#️-security-best-practices)
+- [👥 Authors & Maintainers](#-authors--maintainers)
+- [📄 License](#-license)
 
-```csharp
-// Define your domain aggregate
-public class Order : AggregateRoot<Guid>
-{
-    public string CustomerId { get; private set; } = null!;
-    public OrderStatus Status { get; private set; }
-    
-    // ... domain logic
-}
+---
 
-// Implement repository (using EF Core)
-public class OrderRepository : IRepository<Order>
-{
-    private readonly DbContext _context;
-    
-    public async Task<Order> AddAsync(Order entity, CancellationToken ct = default)
-    {
-        _context.Orders.Add(entity);
-        return entity;
-    }
-    
-    // ... implement other methods
-}
+## 📋 Executive Summary
 
-// Use in application service
-public class CreateOrderService
-{
-    private readonly IUnitOfWork _unitOfWork;
-    
-    public async Task ExecuteAsync(CreateOrderRequest request)
-    {
-        var repository = _unitOfWork.Repository<Order>();
-        
-        var order = new Order(Guid.NewGuid(), request.CustomerId);
-        await repository.AddAsync(order);
-        
-        // Save all changes within transaction boundary
-        await _unitOfWork.SaveChangesAsync();
-        
-        // Dispatch domain events here
-        await DispatchDomainEventsAsync(order.GetChanges());
-    }
-}
+In enterprise Domain-Driven Design (DDD), persistence must serve the domain model—never dictate it. Complex cloud-native architectures require clear boundaries between domain behavior and database operations, consistent transaction management across multiple aggregates, and resilient messaging patterns that withstand distributed network partitions.
+
+`Aarkam.DDD.Repositories` delivers a pure, decoupled abstraction suite that eliminates boilerplate data access code and enforces industry best practices:
+
+- **Storage-Agnostic Core**: First-class support for both Relational stores (PostgreSQL, SQL Server, MySQL) and NoSQL Document engines (Azure Cosmos DB, MongoDB, DynamoDB, RavenDB).
+- **Strict Aggregate Roots**: Guarantees compile-time safety so repositories only manage Aggregate Roots (`IAggregateRoot`), preventing external leaks into child entities.
+- **Partition-Aware NoSQL Contracts**: First-class support for Partition Keys ($O(1)$ point-reads), Upserts, ETags (optimistic concurrency), and bulk ingestion.
+- **Transactional Consistency**: Coordinates changes across multiple aggregates within a single Unit of Work boundary, safely deferring domain event dispatching until after physical commit.
+- **Guaranteed At-Least-Once Delivery**: Native Outbox abstractions permanently resolve dual-write vulnerabilities between relational databases and message brokers.
+- **Idempotency Out of the Box**: Inbox abstractions guarantee exactly-once processing semantics for consumers handling messages from distributed brokers (RabbitMQ, Kafka, Azure Service Bus).
+- **High-Performance Dynamic Queries**: Secure, whitelisted LINQ expression builders protect APIs from SQL injection, unauthorized property probing, and denial-of-service memory allocations.
+
+---
+
+## 🚀 Key Features
+
+- **Store-Agnostic Abstraction Hierarchy**:
+  - `IReadOnlyRepository<TEntity, TKey>`: Pure specification-driven query and retrieval without ORM leaks.
+  - `IBasicRepository<TEntity, TKey>`: Universal asynchronous persistence operations.
+  - `IAggregateRepository<TAggregate, TKey>`: Compile-time guarded DDD aggregate root persistence.
+  - `IDocumentRepository<TDocument, TKey, TPartitionKey>`: Partition-aware NoSQL document store operations.
+  - `IRepository<TEntity, TKey>`: Relational LINQ queryables and eager-loading navigation helpers.
+- **Unit of Work (`IUnitOfWork`)**: Supports both relational database transactions and document-based session transactions (e.g., MongoDB ClientSession, Cosmos DB transactional batches).
+- **Distributed Resilience**: Built-in transactional outbox (`IOutboxRepository`), idempotent consumer inbox (`IInboxRepository`), and saga coordinator (`ISagaRepository`).
+- **Event Sourcing Optimization**: Aggregate snapshot repository (`ISnapshotRepository`) for fast aggregate rehydration.
+- **Whitelisted Dynamic Query Engine**: Extensions (`AddFilter`, `AddSearch`, `AddSorting`, `UsePaging`) that convert client DTOs into secure expressions with fail-closed security.
+- **Standardized Result Models**: Full integration with `DomainException` carrying `ErrorCode`, `Severity` (`ExceptionSeverity`), and contextual `Details`.
+- **Zero Third-Party Dependencies**: Pure .NET contracts; no coupling to EF Core, Dapper, MassTransit, MediatR, or MongoDB drivers.
+
+---
+
+## ⚡ Native AOT & IL Trimming
+
+`Aarkam.DDD.Repositories` is built from the ground up for modern .NET cloud runtimes with full ahead-of-time (AOT) compilation and assembly trimming support:
+
+- **Zero Dynamic Code Generation in Core Abstractions**: All interfaces and contracts use strictly analyzed generic constraints compatible with `PublishAot=true`.
+- **Pre-Trimming Annotations**: Validated across `.NET 8.0` and `.NET 10.0` with `IsAotCompatible=true`.
+- **Lightweight Footprint**: Zero reflection emitted during standard aggregate persistence and query dispatching.
+
+---
+
+## 🏗️ Architectural Overview & Repository Hierarchy
+
+```mermaid
+flowchart TD
+    subgraph CoreAgnostic["Core DDD & Storage-Agnostic Layer"]
+        ROR["IReadOnlyRepository&lt;TEntity, TKey&gt;<br/>Specification-Driven Reads"]
+        BR["IBasicRepository&lt;TEntity, TKey&gt;<br/>Universal Lifecycle Operations"]
+        ROR --> BR
+    end
+
+    subgraph Specializations["Targeted Storage Specializations"]
+        AR["IAggregateRepository&lt;TAggregate, TKey&gt;<br/>Pure DDD Aggregate Root Boundary"]
+        DOC["IDocumentRepository&lt;TDoc, TKey, TPartition&gt;<br/>NoSQL / Cosmos DB / MongoDB / DynamoDB"]
+        REL["IRepository&lt;TEntity, TKey&gt;<br/>Relational / EF Core / LINQ Queries"]
+
+        BR --> AR
+        BR --> DOC
+        BR --> REL
+    end
+
+    subgraph DistributedLayer["Distributed Resilience Layer"]
+        UOW["IUnitOfWork"]
+        OUT["IOutboxRepository"]
+        IN["IInboxRepository"]
+        SAGA["ISagaRepository"]
+        SNAP["ISnapshotRepository"]
+    end
 ```
 
 ---
 
 ## 📦 Installation
 
-### Via .NET CLI
+Install the package via NuGet CLI:
 
 ```bash
 dotnet add package Aarkam.DDD.Repositories
 ```
 
-### Via Package Manager
+Or using the Package Manager Console:
 
 ```powershell
 Install-Package Aarkam.DDD.Repositories
 ```
 
-### Via NuGet Package Explorer
-
-Search for `Aarkam.DDD.Repositories` on [nuget.org](https://www.nuget.org/packages/Aarkam.DDD.Repositories)
-
-### Dependencies
-
-- ✅ **Aarkam.DDD.Domain** (1.0.0-preview01+) — Core DDD types
-- ✅ No other external dependencies — Pure abstractions
-
-### Supported Platforms
-
-- `.NET Standard 2.1` (Xamarin, legacy .NET Framework)
-- `.NET 6.0` (LTS)
-- `.NET 8.0` (LTS)
-- `.NET 10.0` (Current)
-
 ---
 
-## 🏛️ Core Concepts
+## 📖 Core Abstractions & Usage Guide
 
-### 1. **Repository Pattern** — Abstraction Over Data Access
+### 1. Pure DDD Aggregate Root Repositories (`IAggregateRepository<TAggregate, TKey>`)
 
-```csharp
-public interface IRepository<TEntity> where TEntity : class
-{
-    // CRUD Operations
-    Task<TEntity> AddAsync(TEntity entity, CancellationToken ct = default);
-    Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
-    
-    Task<TEntity> UpdateAsync(TEntity entity, CancellationToken ct = default);
-    Task UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default);
-    
-    Task<bool> DeleteAsync(TEntity entity, CancellationToken ct = default);
-    Task<bool> DeleteAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
-    Task<int> DeleteRangeAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
-    
-    // Querying
-    IQueryable<TEntity> AsQueryable();
-    IQueryable<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
-    IQueryable<TEntity> WhereIf(bool condition, Expression<Func<TEntity, bool>> predicate);
-    IQueryable<TEntity> WithIncludes(params Expression<Func<TEntity, object>>[] includes);
-    IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification);
-    
-    // Materialization
-    Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null);
-    List<TEntity> ToList(Expression<Func<TEntity, bool>> predicate = null);
-    Task<PagedResult<TEntity>> ToPagedResultAsync(PagingOptions pagingOptions = null);
-}
-```
-
-**Key Responsibilities:**
-- ✅ Isolate domain logic from persistence implementation
-- ✅ Support multiple data sources (EF Core, Dapper, MongoDB, etc.)
-- ✅ Provide composable, type-safe querying
-- ✅ Handle pagination and filtering at the data layer
-- ✅ Enable unit testing via mock repositories
-
-**Why This Matters:**
-- Your domain model doesn't depend on `DbContext` or ORM specifics
-- Easy to swap implementations (e.g., EF Core → Cosmos DB)
-- Testability: inject mock repositories without database
-- Performance: leave query optimization to the ORM layer
-
----
-
-### 2. **Unit of Work Pattern** — Transactional Boundary
+In pure DDD, child entities must never have their own repository. Restricting persistence to `IAggregateRepository` guarantees that business invariants are maintained through the aggregate root:
 
 ```csharp
-public interface IUnitOfWork : IDisposable, IAsyncDisposable
-{
-    IRepository<TEntity> Repository<TEntity>() where TEntity : class;
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
-    
-    Task BeginTransactionAsync(CancellationToken ct = default);
-    Task CommitTransactionAsync(CancellationToken ct = default);
-    Task RollbackTransactionAsync(CancellationToken ct = default);
-}
-```
+using Aarkam.Domain.Repositories;
 
-**Key Responsibilities:**
-- ✅ Coordinate changes across multiple repositories
-- ✅ Single commit point for atomic transactions
-- ✅ Automatic disposal of resources (IAsyncDisposable)
-- ✅ Optional explicit transaction management
-
-**Usage Pattern:**
-```csharp
-public async Task TransferFundsAsync(Guid fromAccountId, Guid toAccountId, decimal amount)
+public class OrderCommandHandler
 {
-    using var uow = _unitOfWorkFactory.Create();
-    
-    try
+    private readonly IAggregateRepository<Order, Guid> _orderRepository;
+
+    public OrderCommandHandler(IAggregateRepository<Order, Guid> orderRepository)
     {
-        var fromRepo = uow.Repository<Account>();
-        var toRepo = uow.Repository<Account>();
-        
-        var fromAccount = await fromRepo.GetAsync(fromAccountId);
-        var toAccount = await toRepo.GetAsync(toAccountId);
-        
-        fromAccount.Withdraw(amount);
-        toAccount.Deposit(amount);
-        
-        await uow.SaveChangesAsync();  // Atomic: both or neither
+        _orderRepository = orderRepository;
     }
-    catch
+
+    public async Task HandleAddLineAsync(Guid orderId, AddOrderLineDto dto, CancellationToken cancellationToken)
     {
-        await uow.RollbackTransactionAsync();
-        throw;
+        var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken);
+        if (order is null) throw new EntityNotFoundException(typeof(Order), orderId);
+
+        // Business invariants are guarded strictly inside the Aggregate Root
+        order.AddLineItem(dto.ProductId, dto.Quantity, dto.UnitPrice);
+
+        // In pure DDD, SaveAsync atomically commits aggregate state and dispatches/enqueues domain events:
+        await _orderRepository.SaveAsync(order, cancellationToken);
     }
 }
 ```
 
 ---
 
-### 3. **Specification Pattern** — Complex Query Composition
+### 2. NoSQL & Document Database Repositories (`IDocumentRepository<TDocument, TKey, TPartitionKey>`)
 
-The Specification pattern encapsulates business logic queries into reusable, composable objects:
+Tailored for distributed document databases (Azure Cosmos DB, MongoDB, DynamoDB) requiring partition-key routing, atomic upsert, and ETag optimistic concurrency:
 
 ```csharp
-public interface ISpecification<TEntity>
-{
-    Expression<Func<TEntity, bool>> Criteria { get; }
-    List<Expression<Func<TEntity, object>>> Includes { get; }
-    List<string> IncludeStrings { get; }
-    Expression<Func<TEntity, object>> OrderBy { get; }
-    Expression<Func<TEntity, object>> OrderByDescending { get; }
-    int? Take { get; }
-    int? Skip { get; }
-    bool IsPagingEnabled { get; }
-}
+using Aarkam.Domain.Repositories;
 
-// Usage
-public sealed class ActiveOrdersSpecification : SpecificationBase<Order>
+public class CustomerProfileService
 {
-    public ActiveOrdersSpecification(string customerId, int pageIndex = 0, int pageSize = 10)
+    private readonly IDocumentRepository<CustomerProfile, Guid, string> _customerDocRepo;
+
+    public CustomerProfileService(IDocumentRepository<CustomerProfile, Guid, string> customerDocRepo)
     {
-        AddCriteria(o => o.CustomerId == customerId && o.Status != OrderStatus.Completed);
-        AddInclude(o => o.Items);
-        AddInclude(o => o.Payments);
-        OrderByDescending = o => o.CreationTime;
-        Skip = pageIndex * pageSize;
-        Take = pageSize;
+        _customerDocRepo = customerDocRepo;
+    }
+
+    public async Task<CustomerProfile?> GetCustomerAsync(Guid customerId, string countryCode, CancellationToken ct)
+    {
+        // Point-read directly to the physical partition: O(1) efficiency (1 RU in Cosmos DB)
+        return await _customerDocRepo.GetByIdAsync(customerId, partitionKey: countryCode, ct);
+    }
+
+    public async Task UpsertCustomerAsync(CustomerProfile profile, CancellationToken ct)
+    {
+        // Native NoSQL Upsert: insert if new, replace if exists
+        await _customerDocRepo.UpsertAsync(profile, partitionKey: profile.CountryCode, ct);
+    }
+
+    public async Task UpdateWithConcurrencyAsync(CustomerProfile profile, string eTag, CancellationToken ct)
+    {
+        // Safe optimistic concurrency check with HTTP ETag
+        await _customerDocRepo.ReplaceAsync(profile, eTag, partitionKey: profile.CountryCode, ct);
     }
 }
-
-// In repository
-var spec = new ActiveOrdersSpecification(customerId);
-var orders = await repository.ApplySpecification(spec).ToListAsync();
 ```
 
 ---
 
-## 📚 Repository Patterns
+### 3. Store-Agnostic Basic Repositories (`IBasicRepository<TEntity, TKey>`)
 
-### Standard CRUD Repository
-
-Handles basic Create, Read, Update, Delete operations:
+Use `IBasicRepository` when writing storage-neutral application services that operate equally well on relational databases, NoSQL engines, or in-memory caches:
 
 ```csharp
-public class CustomerRepository : IRepository<Customer>
+public class ProductService
 {
-    private readonly DbContext _context;
+    private readonly IBasicRepository<Product, int> _productRepository;
 
-    public async Task<Customer> AddAsync(Customer entity, CancellationToken ct = default)
+    public ProductService(IBasicRepository<Product, int> productRepository)
     {
-        _context.Customers.Add(entity);
-        return entity;
+        _productRepository = productRepository;
     }
 
-    public async Task<Customer> UpdateAsync(Customer entity, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Product>> GetFeaturedProductsAsync(CancellationToken ct)
     {
-        _context.Entry(entity).State = EntityState.Modified;
-        return entity;
+        // Encapsulate query logic inside a reusable Specification
+        var spec = new FeaturedProductsSpecification();
+        return await _productRepository.ListAsync(spec, ct);
     }
-
-    public async Task<bool> DeleteAsync(Customer entity, CancellationToken ct = default)
-    {
-        _context.Customers.Remove(entity);
-        return true;
-    }
-
-    public IQueryable<Customer> AsQueryable()
-    {
-        return _context.Customers.AsQueryable();
-    }
-
-    // ... implement other methods
 }
-```
-
-### Query Filters & Extensions
-
-Apply common filters without polluting domain code:
-
-```csharp
-public async Task<List<Order>> GetActiveOrdersAsync(string customerId)
-{
-    var repo = _unitOfWork.Repository<Order>();
-    
-    return await repo
-        .Where(o => o.CustomerId == customerId)
-        .WhereIf(!string.IsNullOrEmpty(statusFilter), 
-            o => o.Status.ToString() == statusFilter)
-        .WithIncludes(o => o.Items, o => o.Payments)
-        .ToListAsync();
-}
-```
-
-### Pagination
-
-Efficiently paginate large result sets:
-
-```csharp
-public async Task<PagedResult<Order>> GetOrdersPagedAsync(
-    string customerId, 
-    int pageNumber = 1, 
-    int pageSize = 20)
-{
-    var repo = _unitOfWork.Repository<Order>();
-    var pagingOptions = new PagingOptions(pageNumber, pageSize);
-    
-    return await repo
-        .Where(o => o.CustomerId == customerId)
-        .ToPagedResultAsync(pagingOptions);
-}
-
-// Results include: Items, TotalCount, PageNumber, PageSize, TotalPages
 ```
 
 ---
 
-## 🔄 Unit of Work Pattern
+### 4. Relational & LINQ Repositories (`IRepository<TEntity, TKey>`)
 
-### EF Core Implementation Example
+When working with Entity Framework Core or relational databases, `IRepository<TEntity, TKey>` combines basic persistence with LINQ querying and eager-loading navigation:
 
 ```csharp
-public class EFCoreUnitOfWork : IUnitOfWork
+public async Task<List<Order>> GetActiveOrdersAsync(Guid customerId, CancellationToken cancellationToken)
 {
-    private readonly DbContext _context;
-    private readonly Dictionary<Type, object> _repositories = new();
-    private IDbContextTransaction? _transaction;
+    return await _orderRepository.ToListAsync(
+        order => order.CustomerId == customerId && !order.IsCancelled, 
+        cancellationToken);
+}
+```
 
-    public IRepository<TEntity> Repository<TEntity>() where TEntity : class
+---
+
+### 5. Lean Transaction Commit Boundary (`IUnitOfWork`)
+
+Acts purely as a physical transaction coordinator without the Service Locator anti-pattern. Repositories are injected explicitly via constructor injection:
+
+```csharp
+public class OrderCheckoutService
+{
+    private readonly IRepository<Order, Guid> _orderRepo;
+    private readonly IOutboxRepository _outboxRepo;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public OrderCheckoutService(
+        IRepository<Order, Guid> orderRepo,
+        IOutboxRepository outboxRepo,
+        IUnitOfWork unitOfWork)
     {
-        var type = typeof(TEntity);
-        if (!_repositories.ContainsKey(type))
-        {
-            var repositoryType = typeof(EFCoreRepository<>).MakeGenericType(type);
-            var repository = Activator.CreateInstance(repositoryType, _context);
-            _repositories[type] = repository!;
-        }
-        return (IRepository<TEntity>)_repositories[type];
+        _orderRepo = orderRepo;
+        _outboxRepo = outboxRepo;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    public async Task ProcessCheckoutAsync(CheckoutCommand command, CancellationToken cancellationToken)
     {
-        return await _context.SaveChangesAsync(ct);
-    }
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
-    public async Task BeginTransactionAsync(CancellationToken ct = default)
-    {
-        _transaction = await _context.Database.BeginTransactionAsync(ct);
-    }
-
-    public async Task CommitTransactionAsync(CancellationToken ct = default)
-    {
         try
         {
-            await _context.SaveChangesAsync();
-            await _transaction?.CommitAsync();
+            var order = new Order(Guid.NewGuid(), command.CustomerId, command.Amount);
+            await _orderRepo.AddAsync(order, cancellationToken);
+
+            var outboxMessage = new OutboxMessage(Guid.NewGuid(), "OrderPlaced", JsonSerializer.Serialize(order));
+            await _outboxRepo.AddAsync(outboxMessage, cancellationToken);
+
+            // Commit both domain state and outbox envelope atomically
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken);
         }
         catch
         {
-            await _transaction?.RollbackAsync();
+            await _unitOfWork.RollbackTransactionAsync(cancellationToken);
             throw;
         }
     }
-
-    public async Task RollbackTransactionAsync(CancellationToken ct = default)
-    {
-        await _transaction?.RollbackAsync();
-    }
-
-    public void Dispose()
-    {
-        _transaction?.Dispose();
-        _context?.Dispose();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_transaction is not null)
-            await _transaction.DisposeAsync();
-        if (_context is not null)
-            await _context.DisposeAsync();
-    }
 }
 ```
 
 ---
 
-## 🚀 Advanced Features
+### 6. Transactional Outbox Pattern (`IOutboxRepository`)
 
-### 1. Conditional Filtering (WhereIf)
-
-```csharp
-// No need for if/else branches
-var query = repo
-    .AsQueryable()
-    .WhereIf(filterByStatus, o => o.Status == OrderStatus.Pending)
-    .WhereIf(filterByDate, o => o.CreationTime > cutoffDate)
-    .WhereIf(!string.IsNullOrEmpty(searchText), 
-        o => o.OrderNumber.Contains(searchText));
-```
-
-### 2. Eager Loading (WithIncludes)
+Resolves the dual-write problem by persisting outbox messages in the same transaction as domain state mutations:
 
 ```csharp
-var order = await repo
-    .Where(o => o.Id == orderId)
-    .WithIncludes(
-        o => o.Items,
-        o => o.Items.Select(i => i.Product),
-        o => o.Payments)
-    .FirstOrDefaultAsync();
-```
-
-### 3. Search with Security
-
-```csharp
-// Secure search: whitelist allowed properties
-var results = query.AddSearch(
-    "ProductName=Widget,Amount=100",
-    allowedProperties: new[] { "ProductName", "Amount" }  // ✅ Whitelist
-);
-
-// ❌ Blocked: Attacker cannot search on PasswordHash or Secret
-```
-
-### 4. Query Composition
-
-```csharp
-public async Task<List<Order>> ComplexQueryAsync(OrderFilterCriteria criteria)
+public async Task PlaceOrderWithOutboxAsync(Order order, CancellationToken cancellationToken)
 {
-    var query = _repository.AsQueryable();
+    var orderPlacedEvent = new OrderPlacedIntegrationEvent(order.Id, order.TotalAmount);
     
-    // Compose filters fluently
-    if (criteria.Status.HasValue)
-        query = query.Where(o => o.Status == criteria.Status.Value);
-    
-    if (criteria.MinAmount.HasValue)
-        query = query.Where(o => o.TotalAmount >= criteria.MinAmount.Value);
-    
-    if (!string.IsNullOrEmpty(criteria.CustomerSearch))
-        query = query.AddSearch($"CustomerName={criteria.CustomerSearch}");
-    
-    return await query
-        .WithIncludes(o => o.Items)
-        .OrderByDescending(o => o.CreationTime)
-        .ToListAsync();
+    var outboxMessage = new OutboxMessage(
+        Guid.NewGuid(),
+        orderPlacedEvent.GetType().AssemblyQualifiedName!,
+        JsonSerializer.Serialize(orderPlacedEvent),
+        correlationId: Guid.NewGuid());
+
+    await _orderRepository.AddAsync(order, cancellationToken);
+    await _outboxRepository.AddAsync(outboxMessage, cancellationToken);
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 }
 ```
 
 ---
 
-## 🔁 Distributed Patterns
+### 7. Idempotent Consumer Inbox Pattern (`IInboxRepository`)
 
-### 1. Inbox Pattern (Idempotent Event Processing)
-
-**Problem:** Message broker delivers event twice → duplicate processing
-
-**Solution:** Record processed events in database (inbox) within transaction:
+Guarantees exactly-once processing semantics for consumers handling messages from brokers (RabbitMQ, Kafka, Azure Service Bus):
 
 ```csharp
-public interface IInboxRepository
+public async Task HandleOrderPaymentReceivedAsync(OrderPaymentIntegrationEvent @event, CancellationToken cancellationToken)
 {
-    Task<bool> HasBeenProcessedAsync(Guid eventId, string consumerName);
-    Task RecordAsync(IInboxMessage message, CancellationToken ct = default);
-    Task<int> CleanupAsync(DateTimeOffset olderThan);
-}
+    const string consumerName = nameof(HandleOrderPaymentReceivedAsync);
 
-// Usage in event handler
-public class OrderCreatedEventHandler
-{
-    private readonly IInboxRepository _inbox;
-    private readonly IOrderRepository _orders;
-    private readonly IUnitOfWork _uow;
-
-    public async Task HandleAsync(OrderCreatedEvent @event)
+    if (await _inboxRepository.HasBeenProcessedAsync(@event.EventId, consumerName, cancellationToken))
     {
-        // ✅ Guard: If already processed, exit early (idempotence)
-        if (await _inbox.HasBeenProcessedAsync(@event.Id, "OrderCreatedHandler"))
-        {
-            _logger.LogInformation("Event {EventId} already processed", @event.Id);
-            return;
-        }
-
-        // Process the event
-        var order = await _orders.GetAsync(@event.AggregateId);
-        order.MarkAsNotified();
-
-        // Record that we processed it (atomic with SaveChanges)
-        await _inbox.RecordAsync(new InboxMessage 
-        { 
-            EventId = @event.Id, 
-            ConsumerName = "OrderCreatedHandler"
-        });
-        
-        await _uow.SaveChangesAsync();
+        return; // Message already applied; safely acknowledge and exit
     }
+
+    var order = await _orderRepository.GetByIdAsync(@event.OrderId, cancellationToken);
+    order?.MarkAsPaid();
+
+    var inboxRecord = new InboxMessage(@event.EventId, @event.GetType().Name, consumerName);
+    await _inboxRepository.RecordAsync(inboxRecord, cancellationToken);
+
+    await _unitOfWork.SaveChangesAsync(cancellationToken);
 }
 ```
 
-**Benefits:**
-- ✅ Guaranteed exactly-once processing
-- ✅ No duplicate side effects
-- ✅ Atomic with domain changes
-
 ---
 
-### 2. Outbox Pattern (Transactional Messaging)
+### 8. Distributed Saga State Management (`ISagaRepository`)
 
-**Problem:** Domain event raised, but message broker unreachable → event lost
-
-**Solution:** Persist messages in database (outbox) within transaction, then publish asynchronously:
+Persists state machines coordinating distributed transactions across bounded contexts:
 
 ```csharp
-public interface IOutboxRepository
+public async Task HandleSagaStepAsync(Guid sagaId, PaymentCompletedEvent paymentEvent, CancellationToken cancellationToken)
 {
-    Task AddAsync(IOutboxMessage message, CancellationToken ct = default);
-    Task<IReadOnlyList<IOutboxMessage>> GetPendingAsync(int batchSize);
-    Task MarkAsProcessedAsync(Guid messageId, CancellationToken ct = default);
-    Task RecordFailureAsync(Guid messageId, string error);
-    Task<int> CleanupAsync(DateTimeOffset olderThan);
-}
+    var saga = await _sagaRepository.LoadAsync<OrderFulfillmentSaga, OrderFulfillmentSagaData>(sagaId, cancellationToken);
+    if (saga is null) throw new InvalidOperationException($"Saga '{sagaId}' not found.");
 
-// In application service: Add to outbox atomically
-public async Task CreateOrderAsync(CreateOrderRequest request)
-{
-    var order = new Order(Guid.NewGuid(), request.CustomerId);
-    await _orders.AddAsync(order);
-    
-    // Add outbox message (atomic with SaveChanges)
-    var outboxMessage = new OutboxMessage
-    {
-        AggregateId = order.Id,
-        EventType = "OrderCreated",
-        Payload = JsonSerializer.Serialize(order.GetChanges().First())
-    };
-    await _outbox.AddAsync(outboxMessage);
-    
-    await _uow.SaveChangesAsync();  // Both persisted or both rolled back
-}
+    saga.RecordPaymentSuccess(paymentEvent.TransactionId);
 
-// Background processor: Publish pending messages
-public class OutboxPublisher : BackgroundService
-{
-    protected override async Task ExecuteAsync(CancellationToken ct)
-    {
-        while (!ct.IsCancellationRequested)
-        {
-            var pending = await _outbox.GetPendingAsync(batchSize: 100);
-            
-            foreach (var message in pending)
-            {
-                try
-                {
-                    await _messageBroker.PublishAsync(message.Payload);
-                    await _outbox.MarkAsProcessedAsync(message.Id);
-                }
-                catch (Exception ex)
-                {
-                    await _outbox.RecordFailureAsync(message.Id, ex.Message);
-                }
-            }
-            
-            await Task.Delay(TimeSpan.FromSeconds(5), ct);
-        }
-    }
+    await _sagaRepository.SaveAsync<OrderFulfillmentSaga, OrderFulfillmentSagaData>(saga, cancellationToken);
 }
 ```
 
-**Benefits:**
-- ✅ Messages guaranteed to be published (durability)
-- ✅ No loss on application crash
-- ✅ Decouples domain logic from message broker availability
-
 ---
 
-### 3. Saga Pattern (Long-Running Processes)
+### 9. Event Sourcing Snapshots (`ISnapshotRepository`)
 
-**Problem:** Multi-step business process needs coordination across multiple aggregates/services
-
-**Solution:** Persist saga state, replay events to resume:
+Accelerates aggregate reconstitution by persisting periodic state checkpoints:
 
 ```csharp
-public interface ISagaRepository
+public async Task<OrderAggregate> RehydrateAggregateAsync(Guid orderId, CancellationToken cancellationToken)
 {
-    Task<TSaga> LoadAsync<TSaga, TSagaData>(Guid sagaId)
-        where TSaga : ISaga<TSagaData>
-        where TSagaData : class, new();
-    
-    Task SaveAsync<TSaga, TSagaData>(TSaga saga)
-        where TSaga : ISaga<TSagaData>
-        where TSagaData : class, new();
-    
-    Task<IReadOnlyList<Guid>> FindTimedOutSagasAsync(TimeSpan timeout);
-    Task<int> CleanupAsync(DateTimeOffset olderThan);
-}
+    var snapshot = await _snapshotRepository.GetLatestAsync(orderId, cancellationToken);
 
-// Example: Order fulfillment saga
-public class OrderFulfillmentSaga : ISaga<OrderFulfillmentSagaData>
-{
-    public Guid OrderId { get; set; }
-    public OrderFulfillmentSagaData Data { get; set; }
+    OrderAggregate aggregate;
+    long fromVersion = 0;
 
-    public async Task HandleOrderCreatedAsync(OrderCreatedEvent @event)
+    if (snapshot is not null)
     {
-        Data.OrderId = @event.AggregateId;
-        Data.Status = SagaStatus.PaymentPending;
-        
-        // Emit command to payment service
-        await _commandBus.SendAsync(new ProcessPaymentCommand(OrderId, @event.Amount));
-    }
-
-    public async Task HandlePaymentCompletedAsync(PaymentCompletedEvent @event)
-    {
-        Data.Status = SagaStatus.ShippingPending;
-        
-        // Emit command to shipping service
-        await _commandBus.SendAsync(new ShipOrderCommand(OrderId));
-    }
-
-    public async Task HandleOrderShippedAsync(OrderShippedEvent @event)
-    {
-        Data.Status = SagaStatus.Completed;
-        // Saga complete
-    }
-}
-
-// Usage in saga coordinator
-public class OrderFulfillmentSagaCoordinator
-{
-    public async Task StartSagaAsync(OrderCreatedEvent @event)
-    {
-        var saga = new OrderFulfillmentSaga 
-        { 
-            OrderId = @event.AggregateId,
-            Data = new OrderFulfillmentSagaData()
-        };
-        
-        await saga.HandleOrderCreatedAsync(@event);
-        await _sagaRepository.SaveAsync(saga);
-    }
-
-    public async Task ResumeSagaAsync(PaymentCompletedEvent @event)
-    {
-        var saga = await _sagaRepository.LoadAsync<OrderFulfillmentSaga, OrderFulfillmentSagaData>(@event.OrderId);
-        await saga.HandlePaymentCompletedAsync(@event);
-        await _sagaRepository.SaveAsync(saga);
-    }
-}
-```
-
-**Benefits:**
-- ✅ Survives application restarts
-- ✅ Enables timeout/retry logic
-- ✅ Explicit process flow
-
----
-
-### 4. Snapshot Pattern (Event Sourcing Optimization)
-
-**Problem:** Replaying 10,000 events to load an aggregate is slow
-
-**Solution:** Periodically snapshot aggregate state:
-
-```csharp
-public interface ISnapshotRepository
-{
-    Task<ISnapshot> GetLatestAsync(Guid aggregateId);
-    Task<ISnapshot> GetAtVersionAsync(Guid aggregateId, long maxVersion);
-    Task SaveAsync(ISnapshot snapshot);
-    Task<int> PruneAsync(Guid aggregateId, int keepCount = 3);
-}
-
-// In event store
-public async Task<Order> LoadAsync(Guid aggregateId)
-{
-    Order order;
-    
-    // ✅ Try to load from snapshot first
-    var snapshot = await _snapshotRepository.GetLatestAsync(aggregateId);
-    if (snapshot != null)
-    {
-        order = JsonSerializer.Deserialize<Order>(snapshot.Data)!;
-        var fromVersion = snapshot.Version;
+        aggregate = JsonSerializer.Deserialize<OrderAggregate>(snapshot.State)!;
+        fromVersion = snapshot.Version;
     }
     else
     {
-        order = new Order(aggregateId);
-        fromVersion = 0;
+        aggregate = new OrderAggregate(orderId);
     }
 
-    // Replay only events after snapshot
-    var events = await _eventStore.GetEventsAfterVersionAsync(aggregateId, fromVersion);
-    foreach (var @event in events)
-    {
-        order.ApplyEvent(@event);
-    }
+    var deltaEvents = await _eventStore.GetEventsAfterVersionAsync(orderId, fromVersion, cancellationToken);
+    aggregate.ReplayEvents(deltaEvents);
 
-    return order;
-}
-
-// Periodic snapshot creation (background job)
-public async Task CreateSnapshotsAsync()
-{
-    var orderIds = await _eventStore.GetAggregateIdsWithManyEventsAsync(minEventCount: 500);
-    
-    foreach (var orderId in orderIds)
-    {
-        var order = await LoadAsync(orderId);
-        var snapshot = new Snapshot
-        {
-            AggregateId = orderId,
-            Version = order.Version,
-            Data = JsonSerializer.Serialize(order)
-        };
-        
-        await _snapshotRepository.SaveAsync(snapshot);
-    }
-}
-```
-
-**Benefits:**
-- ✅ Sub-millisecond aggregate load times (vs. seconds for 10k events)
-- ✅ Scales event sourcing to millions of aggregates
-- ✅ Automatic prune removes old snapshots
-
----
-
-## 💻 Usage Examples
-
-### Complete Order Management Flow
-
-```csharp
-// 1. Create order
-public class CreateOrderService
-{
-    public async Task ExecuteAsync(CreateOrderRequest request)
-    {
-        var repository = _unitOfWork.Repository<Order>();
-        
-        var order = new Order(Guid.NewGuid(), request.CustomerId);
-        order.AddItem(request.ProductSku, request.Quantity, request.Price);
-        
-        await repository.AddAsync(order);
-        await _unitOfWork.SaveChangesAsync();
-        
-        // Dispatch events to event bus
-        await _eventBus.PublishAsync(order.GetChanges());
-    }
-}
-
-// 2. Query orders with pagination
-public class GetOrdersService
-{
-    public async Task<PagedResult<OrderDto>> ExecuteAsync(GetOrdersQuery query)
-    {
-        var spec = new OrdersForCustomerSpecification(
-            customerId: query.CustomerId,
-            pageIndex: query.PageIndex,
-            pageSize: query.PageSize);
-        
-        var repository = _unitOfWork.Repository<Order>();
-        
-        var result = await repository
-            .ApplySpecification(spec)
-            .ProjectTo<OrderDto>(_mapper.ConfigurationProvider)
-            .ToPagedResultAsync(
-                new PagingOptions(query.PageIndex + 1, query.PageSize));
-        
-        return result;
-    }
-}
-
-// 3. Update order with concurrency handling
-public class ConfirmOrderService
-{
-    public async Task ExecuteAsync(Guid orderId, ConfirmOrderCommand command)
-    {
-        await _unitOfWork.BeginTransactionAsync();
-        
-        try
-        {
-            var repository = _unitOfWork.Repository<Order>();
-            var order = await repository.Where(o => o.Id == orderId).FirstOrDefaultAsync();
-            
-            if (order == null)
-                throw new OrderNotFoundException(orderId);
-            
-            order.Confirm(command.ConfirmedBy);
-            
-            await repository.UpdateAsync(order);
-            await _unitOfWork.SaveChangesAsync();
-            await _unitOfWork.CommitTransactionAsync();
-            
-            // ✅ Transaction committed, events safe
-            await _eventBus.PublishAsync(order.GetChanges());
-        }
-        catch
-        {
-            await _unitOfWork.RollbackTransactionAsync();
-            throw;
-        }
-    }
+    return aggregate;
 }
 ```
 
 ---
 
-## 🔒 Security Considerations
+### 10. Secure Dynamic Querying & Filtering (`AddFilter`, `AddSearch`)
 
-### 1. Property Whitelisting in Search
-
-```csharp
-// ❌ DANGEROUS: User can search on any property
-var results = query.AddSearch("PasswordHash=abc123");
-
-// ✅ SECURE: Whitelist allowed properties
-var results = query.AddSearch(
-    "CustomerName=John",
-    allowedProperties: new[] { "CustomerName", "Email", "Phone" }
-);
-```
-
-### 2. Tenant Isolation
+Provides secure, whitelisted dynamic LINQ queries directly from client DTOs without SQL injection or sensitive property exposure:
 
 ```csharp
-// ✅ CORRECT: Filter by current tenant automatically
-public abstract class TenantRepository<TEntity> : IRepository<TEntity>
-    where TEntity : class, IHasTenant
+[HttpGet("search")]
+public async Task<IActionResult> SearchOrdersAsync([FromQuery] PaginationModel model)
 {
-    public IQueryable<TEntity> AsQueryable()
-    {
-        return _context.Set<TEntity>()
-            .Where(e => e.TenantId == _currentTenant.Id);  // Automatic filtering
-    }
-}
-```
+    var allowedProperties = new[] { "OrderNumber", "CustomerId", "TotalAmount", "CreationTime" };
 
-### 3. Soft Deletes
+    var query = _orderRepository.AsQueryable()
+        .AddFilter(model.Filters, FilterOperation.And, allowedProperties)
+        .AddSearch(model.SearchExpression, allowedProperties)
+        .AddSorting(model.SortingField, allowedProperties);
 
-```csharp
-// ✅ CORRECT: Deleted entities are never returned
-public abstract class SoftDeleteRepository<TEntity> : IRepository<TEntity>
-    where TEntity : class, ISoftDelete
-{
-    public IQueryable<TEntity> AsQueryable()
-    {
-        return _context.Set<TEntity>()
-            .Where(e => !e.IsDeleted);  // Exclude soft-deleted
-    }
+    var pagedResult = await query.ToPagedResultAsync(model.PagingOptions);
+
+    return Ok(ResultModel<PagedResult<Order>>.Success(pagedResult));
 }
 ```
 
 ---
 
-## ⚡ Performance Notes
+### 11. Unified Result Models with DomainException (`ResultModel`, `PagedResult<T>`)
 
-### Query Materialization
-
-**Best Practice:** Use `AsQueryable()` + LINQ to delay materialization:
+Seamlessly converts domain failures into machine-readable API error envelopes:
 
 ```csharp
-// ✅ GOOD: Filter applied at database (thousands of rows become tens)
-var expensiveOrders = repository
-    .Where(o => o.TotalAmount > 10000)  // ← Pushed to DB
-    .ToListAsync();
-
-// ❌ BAD: Load all orders, filter in memory (millions → no cache benefit)
-var expensiveOrders = repository
-    .AsQueryable()
-    .ToList()                            // ← Materialized too early
-    .Where(o => o.TotalAmount > 10000)
-    .ToList();
-```
-
-### Pagination for Large Datasets
-
-```csharp
-// ✅ CORRECT: Paginate at database
-var result = await repository
-    .Where(o => o.Status == OrderStatus.Active)
-    .ToPagedResultAsync(new PagingOptions(pageNumber: 50, pageSize: 20));
-
-// ❌ WRONG: Load all 1M records, paginate in memory
-var allOrders = await repository.ToListAsync();  // OOM!
-var page = allOrders.Skip(49 * 20).Take(20);
-```
-
-### Eager Loading (N+1 Problem)
-
-```csharp
-// ✅ CORRECT: Load related data in single query
-var orders = await repository
-    .Where(o => o.CustomerId == customerId)
-    .WithIncludes(o => o.Items, o => o.Payments)  // ← Eager load
-    .ToListAsync();
-
-// ❌ WRONG: 1 query for orders + N queries for each order's items (N+1)
-var orders = await repository
-    .Where(o => o.CustomerId == customerId)
-    .ToListAsync();
-foreach (var order in orders)
+// Direct conversion from a DomainException
+try
 {
-    var items = order.Items;  // ← Lazy load triggers query per order
+    order.Cancel();
 }
+catch (DomainException ex)
+{
+    return ResultModel.FromException(ex);
+    // Returns:
+    // IsSuccess: false
+    // ErrorCode: "ERR_ORDER_ALREADY_SHIPPED"
+    // Severity: ExceptionSeverity.Error
+    // Details: { "ShippedDate": "2026-10-24" }
+}
+
+// Successful response with data
+return ResultModel<OrderDto>.Success(orderDto);
 ```
 
 ---
 
-## 🤝 Contributing
+## 🛡️ Security Best Practices
 
-Contributions are welcome! Please follow these guidelines:
-
-1. **Report Issues:** GitHub Issues with reproduction steps
-2. **Fork & Branch:** From `develop` branch
-3. **Write Tests:** xUnit for all new features
-4. **Code Style:** Nullable annotations, XML docs, 120-char lines
-5. **Commit Messages:** Conventional format `feat: add...`
-6. **Submit PR:** With linked issue and description
-
-**Development Setup:**
-
-```bash
-git clone https://github.com/melhelbawi/Aarkam.DDD.Repositories.git
-cd Aarkam.DDD.Repositories
-dotnet restore
-dotnet test
-dotnet build
-```
+1. **Property Whitelisting (Fail-Closed)**: Always supply `allowedProperties` when calling `AddFilter`, `AddSearch`, or `AddSorting`. If an empty whitelist or unmapped property is provided, the query rejects the filter by default, shielding sensitive entity properties (e.g., `PasswordHash`, `ApiKey`, `TenantId`) from exposure.
+2. **Input Value Sanitization**: `QeryableFilterExtension.MaxValueLength` (default `500` characters) automatically blocks payload flood attacks and excessive memory allocations.
+3. **ORM Parameterization**: All filter values are constructed through native `Expression.Constant` parameters, ensuring the underlying ORM parameterizes all SQL queries to prevent SQL injection.
 
 ---
 
-## 📋 Versioning
+## 👥 Authors & Maintainers
 
-Follows **Semantic Versioning 2.0.0**:
-- `1.0.0+`: Production-ready
-- `0.x.x`: Preview (API may change)
+- **Eng. Mohamed ElHelbawi** ([@melhelbawi](https://github.com/melhelbawi))
+- **Aarkam Team** ([aarkam.io](https://aarkam.io/))
+
+Repository: [https://github.com/melhelbawi/Aarkam.DDD.Repositories](https://github.com/melhelbawi/Aarkam.DDD.Repositories)  
+NuGet: [https://www.nuget.org/packages/Aarkam.DDD.Repositories/](https://www.nuget.org/packages/Aarkam.DDD.Repositories/)
 
 ---
 
 ## 📄 License
 
-Distributed under **MIT License**. See [LICENSE](https://github.com/melhelbawi/Aarkam.DDD.Repositories/blob/main/LICENSE) for details.
+This project is licensed under the **[MIT License](LICENSE)**.
 
+```text
+Copyright © 2026 Aarkam & Mohamed Elhelbawi. All rights reserved.
 ```
-Copyright (c) 2026 Mohamed Elhelbawi / Aarkam
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software...
-```
-
----
-
-## 🙏 Acknowledgments
-
-Built with inspiration from:
-
-- **Repository Pattern** — Martin Fowler, *Patterns of Enterprise Application Architecture*
-- **Unit of Work Pattern** — EF Core DbContext design
-- **Inbox/Outbox Patterns** — Enterprise Integration Patterns (Hohpe & Woolf)
-- **Saga Pattern** — Clemens Vasters, *Sagas & Choreographed Workflows*
-- **Snapshot Pattern** — Event Sourcing Patterns
-
----
-
-## 📞 Support
-
-- **Documentation:** [GitHub Wiki](https://github.com/melhelbawi/Aarkam.DDD.Repositories/wiki)
-- **Issues:** [GitHub Issues](https://github.com/melhelbawi/Aarkam.DDD.Repositories/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/melhelbawi/Aarkam.DDD.Repositories/discussions)
-- **Depends On:** [Aarkam.DDD.Domain](https://github.com/melhelbawi/Aarkam.DDD.Domain)
-
----
-
-## 🧪 Testing with Mock Repositories
-
-```csharp
-// Unit test with mock repository
-public class CreateOrderServiceTests
-{
-    private readonly Mock<IRepository<Order>> _mockRepository;
-    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-    private readonly CreateOrderService _service;
-
-    [Fact]
-    public async Task Execute_WithValidOrder_AddsOrderAndSavesChanges()
-    {
-        // Arrange
-        var request = new CreateOrderRequest { CustomerId = "customer-1", ... };
-        
-        _mockUnitOfWork.Setup(uow => uow.Repository<Order>())
-            .Returns(_mockRepository.Object);
-
-        // Act
-        await _service.ExecuteAsync(request);
-
-        // Assert
-        _mockRepository.Verify(r => r.AddAsync(It.IsAny<Order>(), default), Times.Once);
-        _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(default), Times.Once);
-    }
-}
-```
-
----
-
-**Made with ❤️ by Mohamed Elhelbawi**
-
-**Depends on:** [Aarkam.DDD.Domain](https://github.com/melhelbawi/Aarkam.DDD.Domain) v1.0.0-preview01+
-

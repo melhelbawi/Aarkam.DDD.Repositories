@@ -76,3 +76,14 @@ public interface IOutboxRepository
     /// <returns>The number of messages deleted.</returns>
     Task<int> CleanupAsync(DateTimeOffset olderThan, CancellationToken cancellationToken = default);
 }
+
+public interface IOutboxRepository<TMessage> : IOutboxRepository where TMessage : class, IOutboxMessage
+{
+    /// <summary>
+    /// Retrieves a batch of pending (unprocessed) messages of type <typeparamref name="TMessage"/> ordered by creation time.
+    /// </summary>
+    /// <param name="batchSize">Maximum number of messages to retrieve.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A collection of pending outbox messages of type <typeparamref name="TMessage"/>.</returns>
+    new Task<IReadOnlyList<TMessage>> GetPendingAsync(int batchSize, CancellationToken cancellationToken = default);
+}

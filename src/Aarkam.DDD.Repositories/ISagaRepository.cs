@@ -24,7 +24,7 @@ namespace Aarkam.Domain.Repositories;
 /// <strong>Usage pattern:</strong>
 /// <code>
 /// // Loading a saga
-/// var saga = await _sagaRepository.LoadAsync&lt;OrderFulfillmentSaga&gt;(orderId);
+/// var saga = await _sagaRepository.LoadAsync&lt;OrderFulfillmentSaga, OrderFulfillmentData&gt;(orderId);
 /// if (saga == null)
 /// {
 ///     saga = new OrderFulfillmentSaga(orderId);
@@ -49,8 +49,8 @@ public interface ISagaRepository
     /// <param name="sagaId">The unique identifier of the saga.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The saga instance, or null if not found.</returns>
-    Task<TSaga> LoadAsync<TSaga, TSagaData>(Guid sagaId, CancellationToken cancellationToken = default)
-        where TSaga : ISaga<TSagaData>
+    Task<TSaga?> LoadAsync<TSaga, TSagaData>(Guid sagaId, CancellationToken cancellationToken = default)
+        where TSaga : class, ISaga<TSagaData>
         where TSagaData : class, new();
 
     /// <summary>
@@ -62,7 +62,7 @@ public interface ISagaRepository
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task SaveAsync<TSaga, TSagaData>(TSaga saga, CancellationToken cancellationToken = default)
-        where TSaga : ISaga<TSagaData>
+        where TSaga : class, ISaga<TSagaData>
         where TSagaData : class, new();
 
     /// <summary>

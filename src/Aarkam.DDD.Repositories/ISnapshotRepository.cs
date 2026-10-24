@@ -34,7 +34,7 @@ public interface ISnapshotRepository
     /// <param name="aggregateId">The unique identifier of the aggregate.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The latest snapshot, or null if no snapshot exists.</returns>
-    Task<ISnapshot> GetLatestAsync(Guid aggregateId, CancellationToken cancellationToken = default);
+    Task<ISnapshot?> GetLatestAsync(Guid aggregateId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a snapshot at or before the specified version.
@@ -43,7 +43,7 @@ public interface ISnapshotRepository
     /// <param name="maxVersion">The maximum version to retrieve.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The snapshot at or before the specified version, or null if none exists.</returns>
-    Task<ISnapshot> GetAtVersionAsync(Guid aggregateId, long maxVersion, CancellationToken cancellationToken = default);
+    Task<ISnapshot?> GetAtVersionAsync(Guid aggregateId, long maxVersion, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves a new snapshot for an aggregate.
@@ -61,4 +61,24 @@ public interface ISnapshotRepository
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The number of snapshots deleted.</returns>
     Task<int> PruneAsync(Guid aggregateId, int keepCount = 3, CancellationToken cancellationToken = default);
+}
+
+public interface ISnapshotRepository<TAggregate> : ISnapshotRepository where TAggregate : class, IAggregateRoot
+{
+    /// <summary>
+    /// Gets the latest snapshot for a specific aggregate type.
+    /// </summary>
+    /// <param name="aggregateId">The unique identifier of the aggregate.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The latest snapshot, or null if no snapshot exists.</returns>
+    new Task<ISnapshot?> GetLatestAsync(Guid aggregateId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a snapshot at or before the specified version for a specific aggregate type.
+    /// </summary>
+    /// <param name="aggregateId">The unique identifier of the aggregate.</param>
+    /// <param name="maxVersion">The maximum version to retrieve.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The snapshot at or before the specified version, or null if none exists.</returns>
+    new Task<ISnapshot?> GetAtVersionAsync(Guid aggregateId, long maxVersion, CancellationToken cancellationToken = default);
 }

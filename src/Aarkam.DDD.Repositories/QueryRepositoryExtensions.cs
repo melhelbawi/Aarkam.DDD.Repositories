@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using Aarkam.DDD.Domain.Entities;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Aarkam.Domain.Repositories;
 
@@ -21,9 +18,9 @@ public static class QueryRepositoryExtensions
     /// <param name="pageSize">The number of entities to include in each page. Must be greater than 0.</param>
     /// <returns>An <see cref="IQueryable{TEntity}"/> containing the entities for the specified page. The result may be empty if
     /// no entities match the filter or the page is out of range.</returns>
-    public static IQueryable<TEntity> GetPaged<TEntity>(this IRepository<TEntity> repository, Expression<Func<TEntity, bool>> predicate = null,
+    public static IQueryable<TEntity> GetPaged<TEntity>(this IRepository<TEntity> repository, Expression<Func<TEntity, bool>>? predicate = null,
         int pageNumber = 1,
-        int pageSize = 10) where TEntity : class
+        int pageSize = 10) where TEntity : class, Aarkam.DDD.Domain.Entities.IEntity
     {
         var query = repository.AsQueryable();
         if (predicate != null)
@@ -52,7 +49,7 @@ public static class QueryRepositoryExtensions
     /// <returns>The filtered queryable, or original source if no valid search is provided.</returns>
     public static IQueryable<TEntity> AddSearch<TEntity>(this IQueryable<TEntity> source,
         string searchExpression,
-        IReadOnlyList<string> allowedProperties = null)
+        IReadOnlyList<string>? allowedProperties = null)
     {
         if (string.IsNullOrWhiteSpace(searchExpression))
             return source;
@@ -66,7 +63,7 @@ public static class QueryRepositoryExtensions
             return source;
 
         var parameter = Expression.Parameter(typeof(TEntity), "x");
-        Expression combinedExpression = null;
+        Expression? combinedExpression = null;
         bool exactMatch = false;
 
         foreach (var part in parts)
@@ -144,10 +141,10 @@ public static class QueryRepositoryExtensions
     /// <returns></returns>
     public static IQueryable<TEntity> AddSorting<TEntity>(this IQueryable<TEntity> source,
         SortingField sort,
-        IEnumerable<string> allowedProperties = null)
+        IEnumerable<string>? allowedProperties = null)
     {
-        if (source == null || sort == null || string.IsNullOrWhiteSpace(sort.Fields))
-            return source;
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (sort == null || string.IsNullOrWhiteSpace(sort.Fields)) return source;
 
         if (allowedProperties == null || !allowedProperties.Any())
             return source;
@@ -276,7 +273,7 @@ public static class QueryRepositoryExtensions
     /// <param name="pagingOptions">The paging options to apply to the query. If null, default paging options are used.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="PagedResult{TEntity}"/>
     /// with the items for the requested page and the total item count.</returns>
-    public static async Task<PagedResult<TEntity>> ToPagedResultAsync<TEntity>(this IQueryable<TEntity> query, PagingOptions pagingOptions = null)
+    public static async Task<PagedResult<TEntity>> ToPagedResultAsync<TEntity>(this IQueryable<TEntity> query, PagingOptions? pagingOptions = null)
     {
         pagingOptions ??= new PagingOptions();
 

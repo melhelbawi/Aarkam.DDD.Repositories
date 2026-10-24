@@ -1,59 +1,68 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Aarkam.Domain.Repositories;
 
 /// <summary>
-/// Unit of Work interface that coordinates changes across one or more repositories 
-/// within a single transaction boundary.
+/// Lean transactional commit boundary coordinating physical persistence across operations.
 /// </summary>
 /// <remarks>
-/// This interface acts as a thin facade over EF Core's DbContext, providing:
-/// - Access to repositories (generic or specific)
-/// - Explicit SaveChanges / Commit point
-/// - Optional transaction support
-/// - Automatic disposal (via IAsyncDisposable)
-/// 
-/// In DDD, the Unit of Work is typically used in application services / command handlers 
-/// to ensure atomicity and to dispatch domain events after persistence.
+/// <para>
+/// <b>Architectural Design:</b>
+/// In modern Domain-Driven Design (DDD) and cloud microservices, <see cref="IUnitOfWork"/> is strictly 
+/// an <b>execution and transaction boundary</b>. It does <b>NOT</b> act as a repository factory or Service Locator 
+/// (avoiding hidden dependencies and constructor anti-patterns).
+/// </para>
+/// <para>
+/// Repositories should always be injected explicitly via constructor Dependency Injection (<c>IServiceCollection</c>).
+/// For pure DDD systems where operations are scoped strictly to a single aggregate, repositories 
+/// (like <see cref="IAggregateRepository{TAggregate, TKey}"/>) can persist and commit directly via <c>SaveAsync</c>, 
+/// making an explicit <see cref="IUnitOfWork"/> optional in application command handlers.
+/// </para>
+/// <para>
+/// Supported persistence paradigms:
+/// <list type="bullet">
+///   <item><description>Relational database transactions (e.g. Entity Framework Core DbContext)</description></item>
+///   <item><description>Document store session transactions (e.g. MongoDB ClientSession, Azure Cosmos DB transactional batches)</description></item>
+///   <item><description>Transactional Outbox coordinator (atomically committing aggregate mutations alongside outbox messages)</description></item>
+/// </list>
+/// </para>
 /// </remarks>
 public interface IUnitOfWork : IDisposable, IAsyncDisposable
 {
     /// <summary>
-    /// Gets a generic repository for the specified entity type.
+    /// Gets a value indicating whether a database transaction is currently in progress.
     /// </summary>
-    /// <typeparam name="TEntity">The entity type (must inherit from class).</typeparam>
-    /// <returns>An instance of <see cref="IRepository{TEntity}"/>.</returns>
-    IRepository<TEntity> Repository<TEntity>() where TEntity : class;
+    bool HasActiveTransaction { get; }
 
     /// <summary>
-    /// Saves all tracked changes to the database asynchronously.
-    /// This is the main commit point — domain events should be dispatched after this call.
+    /// Saves all tracked changes to the underlying data store asynchronously.
+    /// This represents the primary physical commit point. Domain events should be dispatched after this call succeeds.
     /// </summary>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>The number of affected rows.</returns>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The number of state entries or affected rows committed to the database.</returns>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Begins a new database transaction asynchronously.
-    /// Use when you need stricter isolation or rollback capability.
+    /// Begins a new database or session transaction asynchronously.
+    /// Use when explicit transaction isolation, cross-operation rollback, or distributed coordination is required.
     /// </summary>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Commits the current transaction asynchronously.
+    /// Commits the current active transaction asynchronously.
     /// </summary>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task CommitTransactionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Rolls back the current transaction asynchronously (if one is active).
+    /// Rolls back the current active transaction asynchronously, discarding all uncommitted mutations.
     /// </summary>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
 }

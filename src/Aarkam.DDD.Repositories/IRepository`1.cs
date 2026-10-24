@@ -1,4 +1,6 @@
-﻿using System;
+using Aarkam.DDD.Domain;
+using Aarkam.DDD.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -8,15 +10,20 @@ using System.Threading.Tasks;
 namespace Aarkam.Domain.Repositories;
 
 /// <summary>
-/// Generic repository interface providing common CRUD and query operations for entities.
+/// Relational and LINQ-enabled repository interface providing rich query, eager-loading, and mutation operations for entities.
 /// </summary>
-/// <typeparam name="TEntity">The type of entity this repository manages. Must be a reference type (class).</typeparam>
+/// <typeparam name="TEntity">The type of entity this repository manages. Must be a reference type implementing <see cref="IEntity"/>.</typeparam>
 /// <remarks>
-/// This interface follows the Repository pattern and is designed to work with Entity Framework Core (or similar ORMs).
-/// It provides both synchronous-style async methods and flexible querying capabilities.
-/// All operations support cancellation via <see cref="CancellationToken"/>.
+/// <para>
+/// This interface is optimized for Object-Relational Mappers (ORMs) such as Entity Framework Core that support full LINQ expression trees,
+/// change tracking, and relational navigation graph includes.
+/// </para>
+/// <para>
+/// For pure Domain-Driven Design (DDD) aggregate root persistence or NoSQL document engines where relational joins and LINQ providers are absent, 
+/// prefer using <see cref="IAggregateRepository{TAggregate, TKey}"/>, <see cref="IBasicRepository{TEntity, TKey}"/>, or <see cref="IDocumentRepository{TDocument, TKey, TPartitionKey}"/>.
+/// </para>
 /// </remarks>
-public interface IRepository<TEntity> where TEntity : class
+public interface IRepository<TEntity> where TEntity : class, IEntity
 {
     /// <summary>
     /// Adds a new entity to the underlying data store asynchronously.
@@ -102,40 +109,50 @@ public interface IRepository<TEntity> where TEntity : class
     /// <param name="includes">Array of navigation property expressions to include.</param>
     /// <returns>The query with the specified includes applied.</returns>
     IQueryable<TEntity> WithIncludes(params Expression<Func<TEntity, object>>[] includes);
+
     /// <summary>
     /// Applies the given specification to filter, include, and shape the query.
     /// </summary>
     /// <param name="specification">The specification containing criteria, includes, etc.</param>
     /// <returns>Query configured by the specification.</returns>
     IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification);
+
     /// <summary>
     /// Asynchronously creates a list of entities from the repository that match the specified predicate.
     /// </summary>
-    /// <typeparam name="TEntity">The type of the entity contained in the repository.</typeparam>
-    /// <param name="repository">The repository from which to retrieve entities.</param>
     /// <param name="predicate">An optional expression to filter the entities. If null, all entities are included.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of entities that match the
-    /// predicate, or all entities if no predicate is specified.</returns>
-    Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>> predicate = null, CancellationToken cancellationToken = default);
-    /// <summary>
-    /// Retrieves a list of entities that satisfy the specified predicate.
-    /// </summary>
-    /// <param name="predicate">An expression used to filter the entities to be returned. If null, all entities are included.</param>
-    /// <returns>A list of entities of type TEntity that match the predicate. Returns all entities if the predicate is null. The
-    /// list will be empty if no entities match.</returns>
-    List<TEntity> ToList(Expression<Func<TEntity, bool>> predicate = null);
+    /// <returns>A task that represents the asynchronous operation. The task result contains a list of entities that match the predicate.</returns>
+    Task<List<TEntity>> ToListAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously creates a paged result from the specified query, applying the given paging options.
+    /// Synchronously retrieves a list of entities that satisfy the specified predicate.
     /// </summary>
-    /// <remarks>The method executes the query twice: once to retrieve the paged items and once to count the
-    /// total number of items. The returned <see cref="PagedResult{TEntity}"/> includes the total count, current page
-    /// number, page size, and the items for the current page.</remarks>
-    /// <typeparam name="TEntity">The type of the entities in the query.</typeparam>
-    /// <param name="query">The source query to paginate. Must not be null.</param>
+    /// <remarks>
+    /// <b>Warning:</b> In high-throughput cloud microservices and ASP.NET Core APIs, synchronous I/O operations can lead 
+    /// to thread-pool starvation under load. Prefer using <see cref="ToListAsync"/> instead.
+    /// </remarks>
+    /// <param name="predicate">An expression used to filter the entities to be returned. If null, all entities are included.</param>
+    /// <returns>A list of entities of type TEntity that match the predicate.</returns>
+    [Obsolete("In modern asynchronous and cloud microservices architectures, prefer ToListAsync to prevent thread-pool starvation.")]
+    List<TEntity> ToList(Expression<Func<TEntity, bool>>? predicate = null);
+
+    /// <summary>
+    /// Asynchronously creates a paged result from the repository, applying the given paging options.
+    /// </summary>
     /// <param name="pagingOptions">The paging options to apply to the query. If null, default paging options are used.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="PagedResult{TEntity}"/>
-    /// with the items for the requested page and the total item count.</returns>
-    Task<PagedResult<TEntity>> ToPagedResultAsync(PagingOptions pagingOptions = null);
+    /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="PagedResult{TEntity}"/>.</returns>
+    Task<PagedResult<TEntity>> ToPagedResultAsync(PagingOptions? pagingOptions = null);
+}
+
+/// <summary>
+/// Relational and LINQ-enabled repository interface for entities with a strongly typed key.
+/// Unifies storage-agnostic CRUD operations from <see cref="IBasicRepository{TEntity, TKey}"/> 
+/// with relational LINQ querying and eager-loading capabilities from <see cref="IRepository{TEntity}"/>.
+/// </summary>
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TKey">The identity type of the entity.</typeparam>
+public interface IRepository<TEntity, TKey> : IRepository<TEntity>, IBasicRepository<TEntity, TKey> 
+    where TEntity : class, IEntity<TKey>
+{
 }

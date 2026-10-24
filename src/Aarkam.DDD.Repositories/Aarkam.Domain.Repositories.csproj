@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<!-- Multi Target -->
 		<TargetFrameworks>netstandard2.1;net6.0;net8.0;net10.0</TargetFrameworks>
@@ -8,18 +8,27 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<IsPackable>true</IsPackable>
-		<Authors>Mohamed Mohamed Elhelbawi</Authors>
-		<Company>Aarkam</Company>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>1.0.0-preview02</Version>
-		<PackageOutputPath>C:\Nuget</PackageOutputPath>
+		<!-- Package Identification -->
+		<PackageId>Aarkam.DDD.Repositories</PackageId>
 		<Title>Aarkam.DDD.Repositories</Title>
+		<Version>1.0.0-preview02</Version>
+		<Authors>Eng. Mohamed ElHelbawi, Aarkam Team</Authors>
+		<Company>Aarkam</Company>
+		<Description>Enterprise Domain-Driven Design (DDD) repository, unit of work, transactional outbox/inbox, saga, snapshot, and dynamic query abstractions for modern .NET applications. Native AOT &amp; trimming ready with zero external infrastructure dependencies.</Description>
+		<PackageTags>ddd;domain-driven-design;repository;unit-of-work;outbox;inbox;saga;snapshot;cqrs;specification;dotnet;aot</PackageTags>
 
 		<!-- Project and Repository URLs -->
-		<PackageProjectUrl>https://github.com/melhelbawi/Aarkam.Mediator</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/melhelbawi/Aarkam.DDD.Domain</RepositoryUrl>
+		<PackageProjectUrl>https://aarkam.io/</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/melhelbawi/Aarkam.DDD.Repositories</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+
+		<!-- Packaging & Documentation -->
+		<IsPackable>true</IsPackable>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Copyright>Copyright © 2026 Aarkam (https://aarkam.io/) &amp; Mohamed Elhelbawi (https://github.com/melhelbawi). All rights reserved.</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>C:\Nuget</PackageOutputPath>
 
 		<!-- Source Link & Debugging Symbols -->
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -27,14 +36,18 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-		<!-- Build Settings -->
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageOutputPath>C:\Nuget</PackageOutputPath>
-
+		<!-- Native AOT & Trimming Support -->
+		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
+		<NoWarn>$(NoWarn);CS1591;IL2026;IL2060;IL2090;IL3050</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Aarkam.DDD.Domain" Version="1.0.0-preview01" />
+		<PackageReference Include="Aarkam.DDD.Domain" Version="1.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 </Project>

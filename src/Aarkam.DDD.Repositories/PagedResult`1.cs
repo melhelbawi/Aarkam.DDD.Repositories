@@ -1,4 +1,4 @@
-﻿namespace Aarkam.Domain.Repositories;
+namespace Aarkam.Domain.Repositories;
 /// <summary>
 /// Specifies the direction in which a collection is sorted.
 /// </summary>
@@ -174,7 +174,7 @@ public class SortingField
     /// </summary>
     /// <remarks>Specify the names of the fields to retrieve, separated by commas. If this property is null or
     /// empty, all available fields are included by default.</remarks>
-    public string Fields { get; set; }
+    public string Fields { get; set; } = string.Empty;
     /// <summary>
     /// Gets or sets the direction in which sorting is applied.
     /// </summary>
