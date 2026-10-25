@@ -132,6 +132,13 @@ Or add the package reference directly to your `.csproj`:
 <PackageReference Include="Aarkam.DDD.Repositories" Version="1.0.1" />
 ```
 
+### 🧩 Ecosystem Packages
+
+| Package | Description | Target Engines |
+|:---|:---|:---|
+| **[`Aarkam.DDD.Repositories`](https://www.nuget.org/packages/Aarkam.DDD.Repositories/)** | Core DDD repository abstractions, lean Unit of Work, Outbox/Inbox, Sagas, and Snapshots. | Storage-Agnostic |
+| **[`Aarkam.DDD.Repositories.Sql`](https://www.nuget.org/packages/Aarkam.DDD.Repositories.Sql/)** | Production-ready EF Core implementations with ModelBuilder & DI extensions. | PostgreSQL, SQL Server, SQLite, MySQL, Oracle |
+
 ---
 
 ## 📖 Core Abstractions & Usage Guide
