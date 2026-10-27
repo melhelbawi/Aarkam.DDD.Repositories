@@ -122,3 +122,19 @@ public class EfCoreOutboxRepository<TMessage> : EfCoreOutboxRepository, IOutboxR
             .ToListAsync(cancellationToken);
     }
 }
+
+/// <summary>
+/// Strongly-typed generic variant of <see cref="EfCoreOutboxRepository{TMessage}"/> binding to a specific <typeparamref name="TDbContext"/>.
+/// </summary>
+/// <typeparam name="TMessage">The outbox message entity type.</typeparam>
+/// <typeparam name="TDbContext">The application DbContext type.</typeparam>
+public class EfCoreOutboxRepository<TMessage, TDbContext> : EfCoreOutboxRepository<TMessage>
+    where TMessage : class, IOutboxMessage
+    where TDbContext : DbContext
+{
+    public EfCoreOutboxRepository(TDbContext dbContext) : base(dbContext)
+    {
+    }
+
+    public TDbContext Context => (TDbContext)_dbContext;
+}

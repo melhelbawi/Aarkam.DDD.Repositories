@@ -66,3 +66,17 @@ public class EfCoreInboxRepository : IInboxRepository
         return staleRecords.Count;
     }
 }
+
+/// <summary>
+/// Strongly-typed generic variant of <see cref="EfCoreInboxRepository"/> binding to a specific <typeparamref name="TDbContext"/>.
+/// </summary>
+/// <typeparam name="TDbContext">The application DbContext type.</typeparam>
+public class EfCoreInboxRepository<TDbContext> : EfCoreInboxRepository
+    where TDbContext : DbContext
+{
+    public EfCoreInboxRepository(TDbContext dbContext) : base(dbContext)
+    {
+    }
+
+    public TDbContext Context => (TDbContext)_dbContext;
+}

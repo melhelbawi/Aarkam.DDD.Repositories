@@ -1,5 +1,9 @@
 using Aarkam.DDD.Domain.Entities;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Aarkam.Domain.Repositories;
 
@@ -8,7 +12,7 @@ namespace Aarkam.Domain.Repositories;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Unlike relational-specific repository interfaces, <see cref="IBasicRepository{TEntity, TKey}"/> is completely decoupled 
+/// Unlike relational-specific repository interfaces, <see cref="IBasicRepository{TEntity}"/> is completely decoupled 
 /// from Object-Relational Mappers (ORMs) and LINQ providers. It can be implemented across:
 /// <list type="bullet">
 ///   <item><description>NoSQL Document databases (MongoDB, Azure Cosmos DB, AWS DynamoDB, Couchbase, RavenDB)</description></item>
@@ -22,9 +26,8 @@ namespace Aarkam.Domain.Repositories;
 /// </para>
 /// </remarks>
 /// <typeparam name="TEntity">The type of the domain entity or aggregate root.</typeparam>
-/// <typeparam name="TKey">The identity type of the entity.</typeparam>
-public interface IBasicRepository<TEntity, TKey> : IReadOnlyRepository<TEntity, TKey> 
-    where TEntity : class, IEntity<TKey>
+public interface IBasicRepository<TEntity> : IReadOnlyRepository<TEntity>
+    where TEntity : class, IEntity
 {
     /// <summary>
     /// Asynchronously persists a new entity into the underlying data store.
@@ -67,14 +70,6 @@ public interface IBasicRepository<TEntity, TKey> : IReadOnlyRepository<TEntity, 
     Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously deletes an entity by its unique identity key without requiring prior entity loading.
-    /// </summary>
-    /// <param name="id">The unique identifier of the entity to delete.</param>
-    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
-    /// <returns><see langword="true"/> if an entity with the specified ID was found and deleted; otherwise, <see langword="false"/>.</returns>
-    Task<bool> DeleteByIdAsync(TKey id, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Asynchronously deletes multiple entities matching the given predicate expression.
     /// </summary>
     /// <param name="predicate">An expression defining the criteria for entities to remove.</param>
@@ -89,4 +84,22 @@ public interface IBasicRepository<TEntity, TKey> : IReadOnlyRepository<TEntity, 
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Universal data store-agnostic repository interface defining asynchronous mutation and lifecycle operations for domain entities with a strongly typed identity key.
+/// Extends <see cref="IBasicRepository{TEntity}"/> and <see cref="IReadOnlyRepository{TEntity, TKey}"/> with identity-based deletion (<see cref="DeleteByIdAsync"/>).
+/// </summary>
+/// <typeparam name="TEntity">The type of the domain entity or aggregate root.</typeparam>
+/// <typeparam name="TKey">The identity type of the entity.</typeparam>
+public interface IBasicRepository<TEntity, TKey> : IBasicRepository<TEntity>, IReadOnlyRepository<TEntity, TKey> 
+    where TEntity : class, IEntity<TKey>
+{
+    /// <summary>
+    /// Asynchronously deletes an entity by its unique identity key without requiring prior entity loading.
+    /// </summary>
+    /// <param name="id">The unique identifier of the entity to delete.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns><see langword="true"/> if an entity with the specified ID was found and deleted; otherwise, <see langword="false"/>.</returns>
+    Task<bool> DeleteByIdAsync(TKey id, CancellationToken cancellationToken = default);
 }

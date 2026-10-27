@@ -275,4 +275,64 @@ public class EfCoreRepositoryTests : IDisposable
         Assert.NotNull(loadedWithItems);
         Assert.Equal(2, loadedWithItems.Items.Count);
     }
+
+    // =========================================================================
+    // 5. 1-Generic IRepository<TEntity> Interface Verification Tests
+    // =========================================================================
+
+    [Fact]
+    public async Task SingleGeneric_IRepository_ShouldProvideStoreAgnosticReadOperations()
+    {
+        IRepository<TestItemEntity> repo = new EfCoreRepository<TestItemEntity>(_dbContext);
+
+        await repo.AddRangeAsync(new[]
+        {
+            new TestItemEntity { ProductName = "Item A", UnitPrice = 50m, Quantity = 1 },
+            new TestItemEntity { ProductName = "Item B", UnitPrice = 150m, Quantity = 2 },
+            new TestItemEntity { ProductName = "Item C", UnitPrice = 250m, Quantity = 3 }
+        });
+        await _dbContext.SaveChangesAsync();
+
+        // 1. ListAsync
+        var allItems = await repo.ListAsync();
+        Assert.Equal(3, allItems.Count);
+
+        var filtered = await repo.ListAsync(x => x.UnitPrice > 100m);
+        Assert.Equal(2, filtered.Count);
+
+        // 2. FindAsync
+        var itemB = await repo.FindAsync(x => x.ProductName == "Item B");
+        Assert.NotNull(itemB);
+        Assert.Equal(150m, itemB.UnitPrice);
+
+        // 3. CountAsync
+        var totalCount = await repo.CountAsync();
+        Assert.Equal(3, totalCount);
+
+        var highPriceCount = await repo.CountAsync(x => x.UnitPrice > 200m);
+        Assert.Equal(1, highPriceCount);
+
+        // 4. AsNoTracking
+        var noTrackingList = await repo.AsNoTracking().Where(x => x.Quantity >= 2).ToListAsync();
+        Assert.Equal(2, noTrackingList.Count);
+
+        // 5. DeleteRangeAsync (IEnumerable)
+        await repo.DeleteRangeAsync(new[] { itemB });
+        await _dbContext.SaveChangesAsync();
+
+        Assert.Equal(2, await repo.CountAsync());
+    }
+
+    [Fact]
+    public async Task SingleGeneric_ContextRepository_ShouldExposeTypedContext()
+    {
+        var contextRepo = new EfCoreContextRepository<TestItemEntity, TestSqlDbContext>(_dbContext);
+        Assert.NotNull(contextRepo.Context);
+        Assert.Same(_dbContext, contextRepo.Context);
+
+        var item = await contextRepo.AddAsync(new TestItemEntity { ProductName = "ContextItem", UnitPrice = 99m, Quantity = 1 });
+        await contextRepo.Context.SaveChangesAsync();
+
+        Assert.True(item.Id > 0);
+    }
 }

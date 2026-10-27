@@ -27,25 +27,42 @@ public static class AarkamSqlServiceCollectionExtensions
         services.AddScoped<DbContext>(sp => sp.GetRequiredService<TDbContext>());
 
         // 1. Lean Unit of Work
-        services.AddScoped<IUnitOfWork, EfCoreUnitOfWork<TDbContext>>();
         services.AddScoped<EfCoreUnitOfWork<TDbContext>>();
+        services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<EfCoreUnitOfWork<TDbContext>>());
+        services.AddScoped<IUnitOfWork<TDbContext>>(sp => sp.GetRequiredService<EfCoreUnitOfWork<TDbContext>>());
 
-        // 2. Open Generic Repositories
+        // 2. Open Generic Repositories (1-Generic)
+        services.AddScoped(typeof(IReadOnlyRepository<>), typeof(EfCoreRepository<>));
+        services.AddScoped(typeof(IBasicRepository<>), typeof(EfCoreRepository<>));
         services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
-        services.AddScoped(typeof(IAggregateRepository<,>), typeof(EfCoreAggregateRepository<,>));
-        services.AddScoped(typeof(IRepository<,>), typeof(EfCoreRepository<,>));
-        services.AddScoped(typeof(IBasicRepository<,>), typeof(EfCoreRepository<,>));
-        services.AddScoped(typeof(IReadOnlyRepository<,>), typeof(EfCoreRepository<,>));
+        services.AddScoped(typeof(IAggregateRepository<>), typeof(EfCoreAggregateRepository<>));
 
-        // 3. Distributed Messaging & Resilience Repositories
+        // 3. Open Generic Repositories (2-Generic, Keyed)
+        services.AddScoped(typeof(IReadOnlyRepository<,>), typeof(EfCoreRepository<,>));
+        services.AddScoped(typeof(IBasicRepository<,>), typeof(EfCoreRepository<,>));
+        services.AddScoped(typeof(IRepository<,>), typeof(EfCoreRepository<,>));
+        services.AddScoped(typeof(IAggregateRepository<,>), typeof(EfCoreAggregateRepository<,>));
+
+        // 4. Context-Bound Repositories (Direct resolution for multiple DbContext architectures)
+        services.AddScoped(typeof(EfCoreContextRepository<,>));
+        services.AddScoped(typeof(EfCoreRepository<,,>));
+        services.AddScoped(typeof(EfCoreContextAggregateRepository<,>));
+        services.AddScoped(typeof(EfCoreAggregateRepository<,,>));
+
+        // 5. Distributed Messaging & Resilience Repositories
         services.AddScoped<IOutboxRepository, EfCoreOutboxRepository>();
         services.AddScoped(typeof(IOutboxRepository<>), typeof(EfCoreOutboxRepository<>));
+        services.AddScoped(typeof(EfCoreOutboxRepository<,>));
 
         services.AddScoped<IInboxRepository, EfCoreInboxRepository>();
+        services.AddScoped<EfCoreInboxRepository<TDbContext>>();
+
         services.AddScoped<ISagaRepository, EfCoreSagaRepository>();
+        services.AddScoped<EfCoreSagaRepository<TDbContext>>();
 
         services.AddScoped<ISnapshotRepository, EfCoreSnapshotRepository>();
         services.AddScoped(typeof(ISnapshotRepository<>), typeof(EfCoreSnapshotRepository<>));
+        services.AddScoped(typeof(EfCoreSnapshotRepository<,>));
 
         return services;
     }

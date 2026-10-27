@@ -10,7 +10,8 @@ using System.Threading.Tasks;
 namespace Aarkam.Domain.Repositories;
 
 /// <summary>
-/// Relational and LINQ-enabled repository interface providing rich query, eager-loading, and mutation operations for entities.
+/// Relational and LINQ-enabled repository interface providing rich query, eager-loading, change tracking control, and mutation operations for entities.
+/// Extends <see cref="IBasicRepository{TEntity}"/> with ORM-specific querying capabilities.
 /// </summary>
 /// <typeparam name="TEntity">The type of entity this repository manages. Must be a reference type implementing <see cref="IEntity"/>.</typeparam>
 /// <remarks>
@@ -23,47 +24,15 @@ namespace Aarkam.Domain.Repositories;
 /// prefer using <see cref="IAggregateRepository{TAggregate, TKey}"/>, <see cref="IBasicRepository{TEntity, TKey}"/>, or <see cref="IDocumentRepository{TDocument, TKey, TPartitionKey}"/>.
 /// </para>
 /// </remarks>
-public interface IRepository<TEntity> where TEntity : class, IEntity
+public interface IRepository<TEntity> : IBasicRepository<TEntity>
+    where TEntity : class, IEntity
 {
     /// <summary>
-    /// Adds a new entity to the underlying data store asynchronously.
+    /// Returns the underlying <see cref="IQueryable{TEntity}"/> for this entity type.
+    /// Allows full LINQ querying before materialization.
     /// </summary>
-    /// <param name="entity">The entity to add.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>The added entity (with generated ID if applicable).</returns>
-    Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Adds multiple entities to the underlying data store asynchronously.
-    /// </summary>
-    /// <param name="entities">Collection of entities to add.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing entity in the underlying data store asynchronously.
-    /// </summary>
-    /// <param name="entity">The entity with updated values.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>The updated entity.</returns>
-    Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates multiple entities in the underlying data store asynchronously.
-    /// </summary>
-    /// <param name="entities">Collection of entities to update.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Deletes a single entity from the underlying data store asynchronously.
-    /// </summary>
-    /// <param name="entity">The entity to delete (must be tracked or have its key set).</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns><c>true</c> if the deletion succeeded, <c>false</c> otherwise.</returns>
-    Task<bool> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
+    /// <returns>An <see cref="IQueryable{TEntity}"/> that can be further filtered/projected.</returns>
+    IQueryable<TEntity> AsQueryable();
 
     /// <summary>
     /// Deletes entities matching the specified predicate asynchronously.
@@ -74,19 +43,10 @@ public interface IRepository<TEntity> where TEntity : class, IEntity
     Task<bool> DeleteAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes all entities matching the specified predicate asynchronously.
+    /// Returns the underlying <see cref="IQueryable{TEntity}"/> with change tracking disabled for read-only query performance.
     /// </summary>
-    /// <param name="predicate">Expression defining which entities to delete.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>The number of entities deleted.</returns>
-    Task<int> DeleteRangeAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Returns the underlying <see cref="IQueryable{TEntity}"/> for this entity type.
-    /// Allows full LINQ querying before materialization.
-    /// </summary>
-    /// <returns>An <see cref="IQueryable{TEntity}"/> that can be further filtered/projected.</returns>
-    IQueryable<TEntity> AsQueryable();
+    /// <returns>A non-tracking <see cref="IQueryable{TEntity}"/>.</returns>
+    IQueryable<TEntity> AsNoTracking();
 
     /// <summary>
     /// Applies a filter to the query.

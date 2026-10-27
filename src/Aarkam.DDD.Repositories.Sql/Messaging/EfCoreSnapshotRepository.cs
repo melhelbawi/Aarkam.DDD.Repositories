@@ -120,3 +120,19 @@ public class EfCoreSnapshotRepository<TAggregate> : EfCoreSnapshotRepository, IS
             .FirstOrDefaultAsync(cancellationToken);
     }
 }
+
+/// <summary>
+/// Strongly-typed generic variant of <see cref="EfCoreSnapshotRepository{TAggregate}"/> binding to a specific <typeparamref name="TDbContext"/>.
+/// </summary>
+/// <typeparam name="TAggregate">The aggregate root type.</typeparam>
+/// <typeparam name="TDbContext">The application DbContext type.</typeparam>
+public class EfCoreSnapshotRepository<TAggregate, TDbContext> : EfCoreSnapshotRepository<TAggregate>
+    where TAggregate : class, IAggregateRoot
+    where TDbContext : DbContext
+{
+    public EfCoreSnapshotRepository(TDbContext dbContext) : base(dbContext)
+    {
+    }
+
+    public TDbContext Context => (TDbContext)_dbContext;
+}

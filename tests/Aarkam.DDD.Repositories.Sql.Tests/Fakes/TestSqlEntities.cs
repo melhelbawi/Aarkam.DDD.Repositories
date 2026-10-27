@@ -40,9 +40,24 @@ public class TestOrderAggregate : AggregateRoot<Guid>
     public void Cancel()
     {
         IsCancelled = true;
+        RaiseEvent(new OrderCancelledDomainEvent(Id));
     }
 
     public override string GetAggregateType() => nameof(TestOrderAggregate);
+}
+
+public class OrderCancelledDomainEvent : DomainEventBase
+{
+    public Guid OrderId { get; set; }
+
+    public OrderCancelledDomainEvent() { }
+
+    public OrderCancelledDomainEvent(Guid orderId)
+    {
+        OrderId = orderId;
+        AggregateId = orderId.ToString();
+        AggregateType = nameof(TestOrderAggregate);
+    }
 }
 
 public class TestItemEntity : Entity<int>

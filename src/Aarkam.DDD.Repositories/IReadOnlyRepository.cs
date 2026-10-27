@@ -1,6 +1,10 @@
 using Aarkam.DDD.Domain;
 using Aarkam.DDD.Domain.Entities;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Aarkam.Domain.Repositories;
 
@@ -17,30 +21,13 @@ namespace Aarkam.Domain.Repositories;
 /// </list>
 /// </para>
 /// <para>
-/// Queries are expressed through strongly-typed keys or declarative specifications (<see cref="ISpecification{TEntity}"/>),
+/// Queries are expressed through strongly-typed criteria or declarative specifications (<see cref="ISpecification{TEntity}"/>),
 /// ensuring database-specific query syntax and translation leaks are prevented from invading application or domain layers.
 /// </para>
 /// </remarks>
 /// <typeparam name="TEntity">The type of the domain entity or aggregate root.</typeparam>
-/// <typeparam name="TKey">The identity type of the entity (e.g. <see cref="Guid"/>, <see cref="int"/>, <see cref="string"/>).</typeparam>
-public interface IReadOnlyRepository<TEntity, TKey> where TEntity : class, IEntity<TKey>
+public interface IReadOnlyRepository<TEntity> where TEntity : class, IEntity
 {
-    /// <summary>
-    /// Asynchronously retrieves an entity by its unique identifier.
-    /// </summary>
-    /// <param name="id">The unique identity key of the entity.</param>
-    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
-    /// <returns>The entity instance if found; otherwise, <see langword="null"/>.</returns>
-    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Asynchronously checks if an entity with the specified identifier exists in the store.
-    /// </summary>
-    /// <param name="id">The unique identity key to verify.</param>
-    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
-    /// <returns><see langword="true"/> if the entity exists; otherwise, <see langword="false"/>.</returns>
-    Task<bool> ExistsAsync(TKey id, CancellationToken cancellationToken = default);
-
     /// <summary>
     /// Asynchronously finds the first entity matching the specified domain specification criteria.
     /// </summary>
@@ -111,4 +98,30 @@ public interface IReadOnlyRepository<TEntity, TKey> where TEntity : class, IEnti
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A <see cref="PagedResult{TEntity}"/> containing the items for the current page and total item count.</returns>
     Task<PagedResult<TEntity>> GetPagedAsync(ISpecification<TEntity> specification, PagingOptions? pagingOptions = null, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Defines a store-agnostic, read-only repository contract for entities with a strongly typed identity key.
+/// Extends <see cref="IReadOnlyRepository{TEntity}"/> with identity-based queries (<see cref="GetByIdAsync"/>, <see cref="ExistsAsync"/>).
+/// </summary>
+/// <typeparam name="TEntity">The type of the domain entity or aggregate root.</typeparam>
+/// <typeparam name="TKey">The identity type of the entity (e.g. <see cref="Guid"/>, <see cref="int"/>, <see cref="string"/>).</typeparam>
+public interface IReadOnlyRepository<TEntity, TKey> : IReadOnlyRepository<TEntity>
+    where TEntity : class, IEntity<TKey>
+{
+    /// <summary>
+    /// Asynchronously retrieves an entity by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identity key of the entity.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>The entity instance if found; otherwise, <see langword="null"/>.</returns>
+    Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously checks if an entity with the specified identifier exists in the store.
+    /// </summary>
+    /// <param name="id">The unique identity key to verify.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns><see langword="true"/> if the entity exists; otherwise, <see langword="false"/>.</returns>
+    Task<bool> ExistsAsync(TKey id, CancellationToken cancellationToken = default);
 }

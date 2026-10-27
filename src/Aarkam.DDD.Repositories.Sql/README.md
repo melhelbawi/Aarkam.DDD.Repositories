@@ -6,7 +6,7 @@
 [![.NET Multi-Target](https://img.shields.io/badge/.NET-6.0_%7C_7.0_%7C_8.0_%7C_9.0_%7C_10.0_%7C_11.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com/)
 [![EF Core Compatible](https://img.shields.io/badge/EF_Core-6_%7C_7_%7C_8_%7C_9_%7C_10_%7C_11-68217A?style=flat-square&logo=microsoft)](https://learn.microsoft.com/en-us/ef/core/)
 [![Native AOT](https://img.shields.io/badge/Native_AOT-Supported-success?style=flat-square&logo=speedtest)](https://learn.microsoft.com/en-us/dotnet/core/deploying/native-aot/)
-[![Unit & Integration Tests](https://img.shields.io/badge/Tests-60_Passing-brightgreen.svg?style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Repositories)
+[![Unit & Integration Tests](https://img.shields.io/badge/Tests-67_Passing-brightgreen.svg?style=flat-square)](https://github.com/melhelbawi/Aarkam.DDD.Repositories)
 
 > **Enterprise-grade, high-performance Entity Framework Core implementation suite for pure Domain-Driven Design (DDD) architectures, distributed microservices, and mission-critical relational persistence.**
 

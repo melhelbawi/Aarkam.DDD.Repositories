@@ -134,3 +134,17 @@ public class EfCoreSagaRepository : ISagaRepository
         }
     }
 }
+
+/// <summary>
+/// Strongly-typed generic variant of <see cref="EfCoreSagaRepository"/> binding to a specific <typeparamref name="TDbContext"/>.
+/// </summary>
+/// <typeparam name="TDbContext">The application DbContext type.</typeparam>
+public class EfCoreSagaRepository<TDbContext> : EfCoreSagaRepository
+    where TDbContext : DbContext
+{
+    public EfCoreSagaRepository(TDbContext dbContext) : base(dbContext)
+    {
+    }
+
+    public TDbContext Context => (TDbContext)_dbContext;
+}

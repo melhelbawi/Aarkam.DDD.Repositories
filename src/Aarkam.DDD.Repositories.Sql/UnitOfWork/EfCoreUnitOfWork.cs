@@ -114,7 +114,7 @@ public class EfCoreUnitOfWork : IUnitOfWork, IAsyncDisposable, IDisposable
 /// Strongly-typed generic variant of <see cref="EfCoreUnitOfWork"/> binding to a specific <typeparamref name="TDbContext"/>.
 /// </summary>
 /// <typeparam name="TDbContext">The application DbContext type.</typeparam>
-public class EfCoreUnitOfWork<TDbContext> : EfCoreUnitOfWork
+public class EfCoreUnitOfWork<TDbContext> : EfCoreUnitOfWork, IUnitOfWork<TDbContext>
     where TDbContext : DbContext
 {
     public EfCoreUnitOfWork(TDbContext dbContext) : base(dbContext)

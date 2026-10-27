@@ -66,3 +66,12 @@ public interface IUnitOfWork : IDisposable, IAsyncDisposable
     /// <returns>A task representing the asynchronous operation.</returns>
     Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Strongly-typed generic variant of <see cref="IUnitOfWork"/> bound to a specific application persistence or database context.
+/// Enables disambiguation when multiple database contexts or bounded contexts exist within the same application service container.
+/// </summary>
+/// <typeparam name="TContext">The persistence or database context type.</typeparam>
+public interface IUnitOfWork<TContext> : IUnitOfWork
+{
+}

@@ -20,14 +20,12 @@ namespace Aarkam.Domain.Repositories;
 /// </list>
 /// </para>
 /// <para>
-/// This interface guarantees compile-time enforcement of the <see cref="IAggregateRoot{TKey}"/> constraint.
+/// This interface guarantees compile-time enforcement of the <see cref="IAggregateRoot"/> and <see cref="IEntity"/> constraints.
 /// </para>
 /// </remarks>
 /// <typeparam name="TAggregate">The aggregate root type managed by this repository.</typeparam>
-/// <typeparam name="TKey">The identity type of the aggregate root.</typeparam>
-public interface IAggregateRepository<TAggregate, TKey> : IBasicRepository<TAggregate, TKey>
-    where TAggregate : class, IAggregateRoot<TKey>
-    where TKey : IEquatable<TKey>
+public interface IAggregateRepository<TAggregate> : IBasicRepository<TAggregate>
+    where TAggregate : class, IAggregateRoot, IEntity
 {
     /// <summary>
     /// Asynchronously persists the aggregate root, extracts and persists its uncommitted domain events (e.g. to the Transactional Outbox),
@@ -43,7 +41,7 @@ public interface IAggregateRepository<TAggregate, TKey> : IBasicRepository<TAggr
     /// Implementation responsibilities:
     /// <list type="bullet">
     ///   <item><description>Persist state mutations of the aggregate root and its child entity graph.</description></item>
-    ///   <item><description>Extract uncommitted domain events (via <see cref="IAggregateRoot"/>).</description></item>
+    ///   <item><description>Extract uncommitted domain events (via <see cref="IAggregateRoot"/> or <see cref="IHasDomainEvents"/>).</description></item>
     ///   <item><description>Persist events to the Transactional Outbox or dispatch to event handlers within the same transaction.</description></item>
     ///   <item><description>Clear the aggregate's uncommitted event stream after successful commit.</description></item>
     /// </list>
@@ -53,4 +51,15 @@ public interface IAggregateRepository<TAggregate, TKey> : IBasicRepository<TAggr
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A task representing the asynchronous save and commit operation.</returns>
     Task SaveAsync(TAggregate aggregate, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Defines the strict Domain-Driven Design (DDD) contract for an Aggregate Root repository with a strongly typed identity key.
+/// </summary>
+/// <typeparam name="TAggregate">The aggregate root type managed by this repository.</typeparam>
+/// <typeparam name="TKey">The identity type of the aggregate root.</typeparam>
+public interface IAggregateRepository<TAggregate, TKey> : IAggregateRepository<TAggregate>, IBasicRepository<TAggregate, TKey>
+    where TAggregate : class, IAggregateRoot<TKey>
+    where TKey : IEquatable<TKey>
+{
 }

@@ -1,4 +1,6 @@
 using Aarkam.DDD.Domain;
+using Aarkam.DDD.Repositories.Sql.Entities;
+using Aarkam.DDD.Repositories.Sql.Messaging;
 using Aarkam.DDD.Repositories.Sql.Repositories;
 using Aarkam.DDD.Repositories.Sql.Tests.Fakes;
 using Aarkam.Domain.Repositories;
@@ -227,5 +229,58 @@ public class EfCoreAggregateRepositoryTests : IDisposable
     {
         Assert.NotNull(_typedRepository.Context);
         Assert.IsType<TestSqlDbContext>(_typedRepository.Context);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WithDomainEventsAndOutboxRepository_ShouldExtractEventsAndMarkCommitted()
+    {
+        var outboxRepo = new EfCoreOutboxRepository(_dbContext);
+        var repoWithOutbox = new EfCoreAggregateRepository<TestOrderAggregate, Guid>(_dbContext, outboxRepo);
+
+        var orderId = Guid.NewGuid();
+        var order = new TestOrderAggregate(orderId, "ORD-EVENTS", "events@example.com");
+        order.Cancel(); // raises OrderCancelledDomainEvent
+
+        Assert.Single(order.GetChanges());
+
+        await repoWithOutbox.SaveAsync(order);
+
+        // Verify domain events cleared on aggregate root
+        Assert.Empty(order.GetChanges());
+
+        // Verify outbox message record was persisted to database
+        var outboxMessages = await _dbContext.Set<OutboxMessageRecord>().ToListAsync();
+        Assert.Single(outboxMessages);
+        Assert.Contains(orderId.ToString(), outboxMessages[0].Payload);
+    }
+
+    [Fact]
+    public async Task SingleGeneric_AggregateRepository_SaveAsync_ShouldPersistAggregateAndCommitEvents()
+    {
+        var outboxRepo = new EfCoreOutboxRepository(_dbContext);
+        IAggregateRepository<TestOrderAggregate> singleAggRepo = new EfCoreAggregateRepository<TestOrderAggregate>(_dbContext, outboxRepo);
+
+        var orderId = Guid.NewGuid();
+        var order = new TestOrderAggregate(orderId, "ORD-SINGLE-AGG", "single@example.com");
+        order.AddItem("SingleItem", 99m, 1);
+        order.Cancel();
+
+        Assert.Single(order.GetChanges());
+
+        await singleAggRepo.SaveAsync(order);
+
+        Assert.Empty(order.GetChanges());
+
+        var loaded = await _dbContext.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+        Assert.NotNull(loaded);
+        Assert.True(loaded.IsCancelled);
+    }
+
+    [Fact]
+    public void SingleGeneric_ContextAggregateRepository_ShouldExposeTypedContext()
+    {
+        var contextAggRepo = new EfCoreContextAggregateRepository<TestOrderAggregate, TestSqlDbContext>(_dbContext);
+        Assert.NotNull(contextAggRepo.Context);
+        Assert.Same(_dbContext, contextAggRepo.Context);
     }
 }

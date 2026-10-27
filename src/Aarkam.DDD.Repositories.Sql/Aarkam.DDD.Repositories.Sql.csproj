@@ -11,7 +11,7 @@
 		<!-- Package Identification -->
 		<PackageId>Aarkam.DDD.Repositories.Sql</PackageId>
 		<Title>Aarkam.DDD.Repositories.Sql</Title>
-		<Version>1.0.2</Version>
+		<Version>1.0.3</Version>
 		<Authors>Eng. Mohamed ElHelbawi, Aarkam Team</Authors>
 		<Company>Aarkam</Company>
 		<Description>Comprehensive, production-ready SQL and Relational Repository implementations for Domain-Driven Design (DDD) in .NET powered by Entity Framework Core. Provides generic IAggregateRepository, IRepository, IBasicRepository, IReadOnlyRepository, lean IUnitOfWork transaction boundaries, and resilient Transactional Outbox, Inbox, Saga, and Snapshot persistence across PostgreSQL, SQL Server, MySQL, SQLite, and Oracle.</Description>

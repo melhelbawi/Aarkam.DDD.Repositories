@@ -1,5 +1,6 @@
 using Aarkam.DDD.Domain;
 using Aarkam.DDD.Repositories.Sql.DependencyInjection;
+using Aarkam.DDD.Repositories.Sql.Entities;
 using Aarkam.DDD.Repositories.Sql.Messaging;
 using Aarkam.DDD.Repositories.Sql.Repositories;
 using Aarkam.DDD.Repositories.Sql.Tests.Fakes;
@@ -42,26 +43,50 @@ public class DependencyInjectionTests
 
         Assert.NotNull(uow);
         Assert.IsType<EfCoreUnitOfWork<TestSqlDbContext>>(uow);
+
+        var typedUow = scope.ServiceProvider.GetService<IUnitOfWork<TestSqlDbContext>>();
+        Assert.NotNull(typedUow);
+        Assert.Same(uow, typedUow);
     }
 
     [Fact]
-    public void Resolve_AggregateRepository_ShouldReturnEfCoreAggregateRepository()
+    public void Resolve_AggregateRepositories_1GenericAnd2Generic_ShouldResolveSuccessfully()
     {
         using var scope = _serviceProvider.CreateScope();
-        var repo = scope.ServiceProvider.GetService<IAggregateRepository<TestOrderAggregate, Guid>>();
 
-        Assert.NotNull(repo);
-        Assert.IsType<EfCoreAggregateRepository<TestOrderAggregate, Guid>>(repo);
+        // 1-Generic
+        var singleAggRepo = scope.ServiceProvider.GetService<IAggregateRepository<TestOrderAggregate>>();
+        Assert.NotNull(singleAggRepo);
+        Assert.IsType<EfCoreAggregateRepository<TestOrderAggregate>>(singleAggRepo);
+
+        // 2-Generic
+        var keyedAggRepo = scope.ServiceProvider.GetService<IAggregateRepository<TestOrderAggregate, Guid>>();
+        Assert.NotNull(keyedAggRepo);
+        Assert.IsType<EfCoreAggregateRepository<TestOrderAggregate, Guid>>(keyedAggRepo);
     }
 
     [Fact]
-    public void Resolve_EntityRepositories_ShouldReturnEfCoreRepository()
+    public void Resolve_EntityRepositories_1Generic_ShouldResolveSuccessfully()
     {
         using var scope = _serviceProvider.CreateScope();
 
-        var singleRepo = scope.ServiceProvider.GetService<IRepository<TestItemEntity>>();
-        Assert.NotNull(singleRepo);
-        Assert.IsAssignableFrom<IRepository<TestItemEntity>>(singleRepo);
+        var readOnlySingle = scope.ServiceProvider.GetService<IReadOnlyRepository<TestItemEntity>>();
+        Assert.NotNull(readOnlySingle);
+        Assert.IsType<EfCoreRepository<TestItemEntity>>(readOnlySingle);
+
+        var basicSingle = scope.ServiceProvider.GetService<IBasicRepository<TestItemEntity>>();
+        Assert.NotNull(basicSingle);
+        Assert.IsType<EfCoreRepository<TestItemEntity>>(basicSingle);
+
+        var repoSingle = scope.ServiceProvider.GetService<IRepository<TestItemEntity>>();
+        Assert.NotNull(repoSingle);
+        Assert.IsType<EfCoreRepository<TestItemEntity>>(repoSingle);
+    }
+
+    [Fact]
+    public void Resolve_EntityRepositories_2GenericKeyed_ShouldResolveSuccessfully()
+    {
+        using var scope = _serviceProvider.CreateScope();
 
         var repo = scope.ServiceProvider.GetService<IRepository<TestItemEntity, int>>();
         Assert.NotNull(repo);
@@ -77,6 +102,28 @@ public class DependencyInjectionTests
     }
 
     [Fact]
+    public void Resolve_ContextBoundRepositories_ShouldResolveSuccessfully()
+    {
+        using var scope = _serviceProvider.CreateScope();
+
+        var contextRepo = scope.ServiceProvider.GetService<EfCoreContextRepository<TestItemEntity, TestSqlDbContext>>();
+        Assert.NotNull(contextRepo);
+        Assert.NotNull(contextRepo.Context);
+
+        var keyedContextRepo = scope.ServiceProvider.GetService<EfCoreRepository<TestItemEntity, int, TestSqlDbContext>>();
+        Assert.NotNull(keyedContextRepo);
+        Assert.NotNull(keyedContextRepo.Context);
+
+        var contextAggRepo = scope.ServiceProvider.GetService<EfCoreContextAggregateRepository<TestOrderAggregate, TestSqlDbContext>>();
+        Assert.NotNull(contextAggRepo);
+        Assert.NotNull(contextAggRepo.Context);
+
+        var keyedContextAggRepo = scope.ServiceProvider.GetService<EfCoreAggregateRepository<TestOrderAggregate, Guid, TestSqlDbContext>>();
+        Assert.NotNull(keyedContextAggRepo);
+        Assert.NotNull(keyedContextAggRepo.Context);
+    }
+
+    [Fact]
     public void Resolve_MessagingRepositories_ShouldReturnConcreteEfCoreImplementations()
     {
         using var scope = _serviceProvider.CreateScope();
@@ -85,13 +132,29 @@ public class DependencyInjectionTests
         Assert.NotNull(outbox);
         Assert.IsType<EfCoreOutboxRepository>(outbox);
 
+        var typedOutbox = scope.ServiceProvider.GetService<IOutboxRepository<OutboxMessageRecord>>();
+        Assert.NotNull(typedOutbox);
+        Assert.IsType<EfCoreOutboxRepository<OutboxMessageRecord>>(typedOutbox);
+
+        var contextOutbox = scope.ServiceProvider.GetService<EfCoreOutboxRepository<OutboxMessageRecord, TestSqlDbContext>>();
+        Assert.NotNull(contextOutbox);
+        Assert.NotNull(contextOutbox.Context);
+
         var inbox = scope.ServiceProvider.GetService<IInboxRepository>();
         Assert.NotNull(inbox);
         Assert.IsType<EfCoreInboxRepository>(inbox);
 
+        var contextInbox = scope.ServiceProvider.GetService<EfCoreInboxRepository<TestSqlDbContext>>();
+        Assert.NotNull(contextInbox);
+        Assert.NotNull(contextInbox.Context);
+
         var saga = scope.ServiceProvider.GetService<ISagaRepository>();
         Assert.NotNull(saga);
         Assert.IsType<EfCoreSagaRepository>(saga);
+
+        var contextSaga = scope.ServiceProvider.GetService<EfCoreSagaRepository<TestSqlDbContext>>();
+        Assert.NotNull(contextSaga);
+        Assert.NotNull(contextSaga.Context);
 
         var snapshot = scope.ServiceProvider.GetService<ISnapshotRepository>();
         Assert.NotNull(snapshot);
@@ -100,6 +163,10 @@ public class DependencyInjectionTests
         var typedSnapshot = scope.ServiceProvider.GetService<ISnapshotRepository<TestOrderAggregate>>();
         Assert.NotNull(typedSnapshot);
         Assert.IsType<EfCoreSnapshotRepository<TestOrderAggregate>>(typedSnapshot);
+
+        var contextSnapshot = scope.ServiceProvider.GetService<EfCoreSnapshotRepository<TestOrderAggregate, TestSqlDbContext>>();
+        Assert.NotNull(contextSnapshot);
+        Assert.NotNull(contextSnapshot.Context);
     }
 
     [Fact]
