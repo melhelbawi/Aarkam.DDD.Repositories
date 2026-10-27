@@ -31,6 +31,7 @@ public static class AarkamSqlServiceCollectionExtensions
         services.AddScoped<EfCoreUnitOfWork<TDbContext>>();
 
         // 2. Open Generic Repositories
+        services.AddScoped(typeof(IRepository<>), typeof(EfCoreRepository<>));
         services.AddScoped(typeof(IAggregateRepository<,>), typeof(EfCoreAggregateRepository<,>));
         services.AddScoped(typeof(IRepository<,>), typeof(EfCoreRepository<,>));
         services.AddScoped(typeof(IBasicRepository<,>), typeof(EfCoreRepository<,>));

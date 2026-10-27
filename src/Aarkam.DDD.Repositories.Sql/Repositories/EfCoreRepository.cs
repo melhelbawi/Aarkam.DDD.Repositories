@@ -7,13 +7,11 @@ using System.Linq.Expressions;
 namespace Aarkam.DDD.Repositories.Sql.Repositories;
 
 /// <summary>
-/// Comprehensive Entity Framework Core implementation of relational and store-agnostic repository contracts
-/// unifying <see cref="IRepository{TEntity, TKey}"/>, <see cref="IBasicRepository{TEntity, TKey}"/>, and <see cref="IReadOnlyRepository{TEntity, TKey}"/>.
+/// Comprehensive Entity Framework Core implementation of the relational and store-agnostic repository contract <see cref="IRepository{TEntity}"/>.
 /// </summary>
 /// <typeparam name="TEntity">The entity type.</typeparam>
-/// <typeparam name="TKey">The identity type of the entity.</typeparam>
-public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IReadOnlyRepository<TEntity, TKey>
-    where TEntity : class, IEntity<TKey>
+public class EfCoreRepository<TEntity> : IRepository<TEntity>
+    where TEntity : class, IEntity
 {
     protected readonly DbContext _dbContext;
     protected readonly DbSet<TEntity> _dbSet;
@@ -31,45 +29,35 @@ public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IRead
     // 1. Storage-Agnostic & Basic Read Operations
     // =========================================================================
 
-    /// <inheritdoc />
-    public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet.FindAsync(new object?[] { id }, cancellationToken).AsTask();
-    }
-
-    /// <inheritdoc />
-    public virtual Task<TEntity?> FindByIdAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        return GetByIdAsync(id, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public virtual async Task<bool> ExistsAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet.AnyAsync(e => e.Id!.Equals(id), cancellationToken);
-    }
-
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously finds the first entity matching the specified specification.
+    /// </summary>
     public virtual async Task<TEntity?> FindAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
     {
         if (specification == null) throw new ArgumentNullException(nameof(specification));
         return await ApplySpecification(specification).FirstOrDefaultAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously finds the first entity matching the specified predicate.
+    /// </summary>
     public virtual async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
         return await _dbSet.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously retrieves all entities.
+    /// </summary>
     public virtual async Task<IReadOnlyList<TEntity>> ListAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet.ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously retrieves entities matching the specified specification.
+    /// </summary>
     public virtual async Task<IReadOnlyList<TEntity>> ListAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
     {
         if (specification == null) throw new ArgumentNullException(nameof(specification));
@@ -77,20 +65,26 @@ public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IRead
         return await query.ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously retrieves entities matching the specified predicate.
+    /// </summary>
     public virtual async Task<IReadOnlyList<TEntity>> ListAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
         return await _dbSet.Where(predicate).ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously counts total entities.
+    /// </summary>
     public virtual async Task<long> CountAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet.LongCountAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously counts entities matching the specified specification.
+    /// </summary>
     public virtual async Task<long> CountAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
     {
         if (specification == null) throw new ArgumentNullException(nameof(specification));
@@ -98,14 +92,18 @@ public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IRead
         return await query.LongCountAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously counts entities matching the specified predicate.
+    /// </summary>
     public virtual async Task<long> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
         return await _dbSet.Where(predicate).LongCountAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously retrieves a paged result of entities matching the specified specification.
+    /// </summary>
     public virtual async Task<PagedResult<TEntity>> GetPagedAsync(
         ISpecification<TEntity> specification,
         PagingOptions? pagingOptions = null,
@@ -169,17 +167,6 @@ public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IRead
     }
 
     /// <inheritdoc />
-    public virtual async Task<bool> DeleteByIdAsync(TKey id, CancellationToken cancellationToken = default)
-    {
-        var entity = await GetByIdAsync(id, cancellationToken);
-        if (entity == null)
-            return false;
-
-        _dbSet.Remove(entity);
-        return true;
-    }
-
-    /// <inheritdoc />
     public virtual async Task<bool> DeleteAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -199,7 +186,9 @@ public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IRead
         return entities.Count;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously deletes multiple entities.
+    /// </summary>
     public virtual Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
         if (entities == null) throw new ArgumentNullException(nameof(entities));
@@ -330,8 +319,59 @@ public class EfCoreRepository<TEntity, TKey> : IRepository<TEntity, TKey>, IRead
 }
 
 /// <summary>
+/// Comprehensive Entity Framework Core implementation of relational and store-agnostic repository contracts
+/// unifying <see cref="IRepository{TEntity, TKey}"/>, <see cref="IBasicRepository{TEntity, TKey}"/>, and <see cref="IReadOnlyRepository{TEntity, TKey}"/>.
+/// </summary>
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TKey">The identity type of the entity.</typeparam>
+public class EfCoreRepository<TEntity, TKey> : EfCoreRepository<TEntity>, IRepository<TEntity, TKey>, IReadOnlyRepository<TEntity, TKey>
+    where TEntity : class, IEntity<TKey>
+{
+    public EfCoreRepository(DbContext dbContext) : base(dbContext)
+    {
+    }
+
+    // =========================================================================
+    // 1. Storage-Agnostic & Basic Read Operations with Key
+    // =========================================================================
+
+    /// <inheritdoc />
+    public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet.FindAsync(new object?[] { id }, cancellationToken).AsTask();
+    }
+
+    /// <inheritdoc />
+    public virtual Task<TEntity?> FindByIdAsync(TKey id, CancellationToken cancellationToken = default)
+    {
+        return GetByIdAsync(id, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<bool> ExistsAsync(TKey id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet.AnyAsync(e => e.Id!.Equals(id), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<bool> DeleteByIdAsync(TKey id, CancellationToken cancellationToken = default)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken);
+        if (entity == null)
+            return false;
+
+        _dbSet.Remove(entity);
+        return true;
+    }
+}
+
+
+/// <summary>
 /// Strongly-typed generic variant of <see cref="EfCoreRepository{TEntity, TKey}"/> binding to a specific <typeparamref name="TDbContext"/>.
 /// </summary>
+/// <typeparam name="TEntity">The entity type.</typeparam>
+/// <typeparam name="TKey">The identity type of the entity.</typeparam>
+/// <typeparam name="TDbContext">The application DbContext type.</typeparam>
 public class EfCoreRepository<TEntity, TKey, TDbContext> : EfCoreRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
     where TDbContext : DbContext

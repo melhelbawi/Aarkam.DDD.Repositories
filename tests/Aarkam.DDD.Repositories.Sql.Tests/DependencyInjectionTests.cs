@@ -59,6 +59,10 @@ public class DependencyInjectionTests
     {
         using var scope = _serviceProvider.CreateScope();
 
+        var singleRepo = scope.ServiceProvider.GetService<IRepository<TestItemEntity>>();
+        Assert.NotNull(singleRepo);
+        Assert.IsAssignableFrom<IRepository<TestItemEntity>>(singleRepo);
+
         var repo = scope.ServiceProvider.GetService<IRepository<TestItemEntity, int>>();
         Assert.NotNull(repo);
         Assert.IsType<EfCoreRepository<TestItemEntity, int>>(repo);
